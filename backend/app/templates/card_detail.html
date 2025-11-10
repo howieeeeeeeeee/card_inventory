@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}{{ card.player_name or card.pokemon_name }} - Card Inventory{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="/" class="text-blue-600 hover:text-blue-700 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column - Card Image and Basic Info -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 sticky top-8">
+                <div class="aspect-[3/4] bg-gray-100 overflow-hidden">
+                    <img src="{{ card.imgbb_url }}?v={{ range(1, 10000) | random }}" alt="{{ card.player_name or card.pokemon_name }}" class="w-full h-full object-cover">
+                </div>
+                <div class="p-6">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">
+                        {{ card.player_name or card.pokemon_name }}
+                    </h1>
+                    <p class="text-lg text-gray-600 mb-4">
+                        {{ card.year }} {{ card.brand }}
+                    </p>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-2">
+                        <button onclick="showModal('editDefinitionModal')" class="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm">
+                            Edit Card
+                        </button>
+                        <button onclick="archiveCard('{{ card._id }}')" class="px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                            Archive
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Card Details and Inventory -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Add Inventory Button -->
+            <div>
+                <button onclick="showModal('addInventoryModalDetail')" class="w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium">
+                    + Add Inventory Item
+                </button>
+            </div>
+
+            <!-- Card Definition Details -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Card Details</h2>
+                <dl class="grid grid-cols-2 gap-4">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Type</dt>
+                        <dd class="mt-1 text-sm text-gray-900 capitalize">{{ card.card_type }}</dd>
+                    </div>
+                    {% if card.series %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Series</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ card.series }}</dd>
+                    </div>
+                    {% endif %}
+                    {% if card.card_number %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Card Number</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ card.card_number }}</dd>
+                    </div>
+                    {% endif %}
+                    {% if card.insert_parallel %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Insert/Parallel</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ card.insert_parallel }}</dd>
+                    </div>
+                    {% endif %}
+                    {% if card.language %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Language</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ card.language }}</dd>
+                    </div>
+                    {% endif %}
+                    {% if card.era %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Era</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ card.era }}</dd>
+                    </div>
+                    {% endif %}
+                </dl>
+                {% if card.note %}
+                <div class="mt-4">
+                    <dt class="text-sm font-medium text-gray-500">Notes</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ card.note }}</dd>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Inventory Items by Status -->
+            {% for status, status_name in [('in_stock', 'In Stock'), ('shipping', 'Shipping'), ('grading', 'Grading'), ('sold', 'Sold')] %}
+            {% set items = inventory_by_status.get(status, []) %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">
+                        {{ status_name }}
+                        <span class="text-sm font-normal text-gray-500">({{ items|length }})</span>
+                    </h2>
+                </div>
+
+                {% if items %}
+                <div class="space-y-3">
+                    {% for item in items %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    {% if item.serial_number %}
+                                    <span class="font-semibold text-gray-900">#{{ item.serial_number }}</span>
+                                    {% endif %}
+                                    {% if item.condition %}
+                                    <span class="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded">Condition: {{ item.condition }}</span>
+                                    {% endif %}
+                                    {% if item.personal_grade %}
+                                    <span class="text-sm text-gray-600">Grade: {{ item.personal_grade }}</span>
+                                    {% endif %}
+                                </div>
+
+                                {% if item.notes %}
+                                <p class="text-sm text-gray-600 mb-2">{{ item.notes }}</p>
+                                {% endif %}
+
+                                <div class="flex gap-4 text-xs text-gray-500">
+                                    {% if item.is_graded %}
+                                    <span class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Graded
+                                    </span>
+                                    {% endif %}
+                                    {% if item.is_in_taiwan %}
+                                    <span>📍 Taiwan</span>
+                                    {% endif %}
+                                    {% if item.acquisition and item.acquisition.total_cost %}
+                                    <span>Cost: ${{ item.acquisition.total_cost }}</span>
+                                    {% endif %}
+                                    {% if item.disposition and item.disposition.revenue %}
+                                    <span>Sold: ${{ item.disposition.revenue }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button onclick="editInventoryItem('{{ item._id }}')" class="px-3 py-1 text-xs bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors">
+                                    Edit
+                                </button>
+                                <button onclick="archiveInventory('{{ item._id }}')" class="px-3 py-1 text-xs bg-white text-gray-900 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                    Archive
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-center py-8">No items in this status</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Card Definition Modal -->
+<div id="editDefinitionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-900">Edit Card Definition</h2>
+                <button onclick="hideModal('editDefinitionModal')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <form action="/definitions/update/{{ card._id }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+            <!-- Pre-filled form with card data -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Card Type *</label>
+                <select name="card_type" id="edit_card_type" onchange="toggleEditCardTypeFields()" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="sport" {% if card.card_type == 'sport' %}selected{% endif %}>Sport</option>
+                    <option value="pokemon" {% if card.card_type == 'pokemon' %}selected{% endif %}>Pokemon</option>
+                </select>
+            </div>
+
+            <div id="edit_sport_fields" {% if card.card_type != 'sport' %}class="hidden"{% endif %}>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Player Name *</label>
+                <input type="text" name="player_name" value="{{ card.player_name or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+
+            <div id="edit_pokemon_fields" {% if card.card_type != 'pokemon' %}class="hidden"{% endif %} class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pokemon Name *</label>
+                    <input type="text" name="pokemon_name" value="{{ card.pokemon_name or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                        <input type="text" name="language" value="{{ card.language or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Era</label>
+                        <input type="text" name="era" value="{{ card.era or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Year *</label>
+                    <input type="text" name="year" value="{{ card.year }}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Brand *</label>
+                    <input type="text" name="brand" value="{{ card.brand }}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Series</label>
+                    <input type="text" name="series" value="{{ card.series or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                    <input type="text" name="card_number" value="{{ card.card_number or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Insert/Parallel</label>
+                <input type="text" name="insert_parallel" value="{{ card.insert_parallel or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea name="note" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">{{ card.note or '' }}</textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Update Card Image (optional)</label>
+                <input type="file" name="image" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <p class="text-xs text-gray-500 mt-1">Leave empty to keep current image</p>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <button type="button" onclick="hideModal('editDefinitionModal')" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                    Update Card
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Inventory Modal for this specific card -->
+<div id="addInventoryModalDetail" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-900">Add Inventory Item</h2>
+                <button onclick="hideModal('addInventoryModalDetail')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <form action="/inventory/create" method="POST" class="p-6 space-y-4">
+            <input type="hidden" name="card_definition_id" value="{{ card._id }}">
+            <input type="hidden" name="redirect_to_detail" value="true">
+
+            <!-- Same fields as add_inventory.html but with card pre-selected -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="in_stock">In Stock</option>
+                        <option value="shipping">Shipping</option>
+                        <option value="grading">Grading</option>
+                        <option value="sold">Sold</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Serial Number</label>
+                    <input type="text" name="serial_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Condition</label>
+                    <input type="text" name="condition" placeholder="e.g., Near Mint" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Personal Grade</label>
+                    <input type="text" name="personal_grade" placeholder="e.g., 9.5" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Defects</label>
+                <textarea name="defects" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+            </div>
+
+            <div class="flex gap-6">
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="is_graded" value="true" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="text-sm text-gray-700">Is Graded</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="is_in_taiwan" value="true" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="text-sm text-gray-700">In Taiwan</span>
+                </label>
+            </div>
+
+            <div class="border-t pt-4">
+                <h3 class="font-semibold text-gray-900 mb-3">Acquisition Information</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" name="acquisition_date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                        <input type="number" step="0.01" name="acquisition_price" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Shipping</label>
+                        <input type="number" step="0.01" name="acquisition_shipping" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tax</label>
+                        <input type="number" step="0.01" name="acquisition_tax" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Cost</label>
+                        <input type="number" step="0.01" name="acquisition_total_cost" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Acquired From</label>
+                        <input type="text" name="acquisition_acquiredFrom" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Paid By</label>
+                        <input type="text" name="acquisition_paid_by" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <button type="button" onclick="hideModal('addInventoryModalDetail')" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                    Add Item
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Inventory Item Modal -->
+{% include 'modals/edit_inventory.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+function toggleEditCardTypeFields() {
+    const cardType = document.getElementById('edit_card_type').value;
+    const sportFields = document.getElementById('edit_sport_fields');
+    const pokemonFields = document.getElementById('edit_pokemon_fields');
+
+    if (cardType === 'sport') {
+        sportFields.classList.remove('hidden');
+        pokemonFields.classList.add('hidden');
+    } else {
+        sportFields.classList.add('hidden');
+        pokemonFields.classList.remove('hidden');
+    }
+}
+
+function archiveCard(cardId) {
+    if (confirm('Are you sure you want to archive this card? It will be hidden but not deleted.')) {
+        fetch(`/definitions/archive/${cardId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/';
+                } else {
+                    alert('Failed to archive card');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to archive card');
+            });
+    }
+}
+
+function archiveInventory(itemId) {
+    if (confirm('Are you sure you want to archive this inventory item? It will be hidden but not deleted.')) {
+        fetch(`/inventory/archive/${itemId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to archive item');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to archive item');
+            });
+    }
+}
+</script>
+{% endblock %}

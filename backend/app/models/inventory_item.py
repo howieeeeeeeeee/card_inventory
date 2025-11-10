@@ -35,6 +35,7 @@ class InventoryItemModel:
         doc = {
             'card_definition_id': ObjectId(data['card_definition_id']),
             'status': data.get('status', 'in_stock'),
+            'archived': False,  # Soft delete flag
             'created_at': datetime.utcnow(),
             'updated_at': datetime.utcnow(),
         }

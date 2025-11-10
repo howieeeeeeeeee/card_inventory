@@ -7,6 +7,7 @@ from backend.app.database import DatabaseConnection
 def create_app():
     """Application factory for creating Flask app"""
     app = Flask(__name__)
+    app.secret_key = Config.SECRET_KEY
 
     # Load configuration
     app.config.from_object(Config)
@@ -19,10 +20,10 @@ def create_app():
         print("Please check your .env file and ensure all required variables are set.")
         raise
 
-    # Enable CORS
+    # Enable CORS for API endpoints only
     CORS(app, resources={
         r"/api/*": {
-            "origins": Config.FRONTEND_URL,
+            "origins": "*",
             "methods": ["GET", "POST", "PUT", "DELETE"],
             "allow_headers": ["Content-Type"]
         }
@@ -38,11 +39,18 @@ def create_app():
         dashboard_bp,
         upload_bp
     )
+    from backend.app.routes.web import web_bp
+    from backend.app.routes.filters import filters_bp
 
+    # Web routes (HTML pages)
+    app.register_blueprint(web_bp)
+
+    # API routes
     app.register_blueprint(card_definitions_bp)
     app.register_blueprint(inventory_items_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(upload_bp)
+    app.register_blueprint(filters_bp)
 
     # Health check endpoint
     @app.route('/health')

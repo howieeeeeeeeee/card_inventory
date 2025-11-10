@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Action Buttons and Search -->
+    <div class="mb-8">
+        <div class="flex flex-wrap gap-2 mb-6">
+            <button onclick="showModal('addDefinitionModal')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">
+                + Add Card Definition
+            </button>
+            <button onclick="showModal('addInventoryModal')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm">
+                + Add Inventory Item
+            </button>
+        </div>
+
+        <!-- Search and Filter -->
+        <form method="GET" action="/" class="flex flex-col sm:flex-row gap-3">
+            <input
+                type="text"
+                name="q"
+                value="{{ request.args.get('q', '') }}"
+                placeholder="Search cards by name, brand, series..."
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            />
+            <select
+                name="type"
+                onchange="this.form.submit()"
+                class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white"
+            >
+                <option value="">All Types</option>
+                <option value="sport" {% if request.args.get('type') == 'sport' %}selected{% endif %}>Sport</option>
+                <option value="pokemon" {% if request.args.get('type') == 'pokemon' %}selected{% endif %}>Pokemon</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Cards Grid -->
+    {% if cards %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for card in cards %}
+            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-200">
+                <!-- Card Image -->
+                <a href="/card/{{ card._id }}" class="cursor-pointer block">
+                    <div class="aspect-[3/4] bg-gray-100 overflow-hidden">
+                        <img src="{{ card.imgbb_url }}" alt="{{ card.player_name or card.pokemon_name }}" class="w-full h-full object-cover">
+                    </div>
+
+                    <!-- Card Info -->
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900 text-lg mb-1">
+                            {{ card.player_name or card.pokemon_name }}
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-3">
+                            {{ card.year }} {{ card.brand }}
+                            {% if card.insert_parallel %} - {{ card.insert_parallel }}{% endif %}
+                        </p>
+
+                        <!-- Inventory Counts -->
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="flex justify-between items-center px-2 py-1 bg-green-50 rounded">
+                                <span class="text-gray-600">In Stock:</span>
+                                <span class="font-semibold text-green-700">{{ card.counts.in_stock }}</span>
+                            </div>
+                            <div class="flex justify-between items-center px-2 py-1 bg-blue-50 rounded">
+                                <span class="text-gray-600">Grading:</span>
+                                <span class="font-semibold text-blue-700">{{ card.counts.grading }}</span>
+                            </div>
+                            <div class="flex justify-between items-center px-2 py-1 bg-yellow-50 rounded">
+                                <span class="text-gray-600">Shipping:</span>
+                                <span class="font-semibold text-yellow-700">{{ card.counts.shipping }}</span>
+                            </div>
+                            <div class="flex justify-between items-center px-2 py-1 bg-purple-50 rounded">
+                                <span class="text-gray-600">Sold:</span>
+                                <span class="font-semibold text-purple-700">{{ card.counts.sold }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-16">
+            <p class="text-gray-500 text-lg">No cards found. Add your first card definition to get started!</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Add Card Definition Modal -->
+{% include 'modals/add_definition.html' %}
+
+<!-- Add Inventory Item Modal -->
+{% include 'modals/add_inventory.html' %}
+
+<!-- Edit Inventory Item Modal -->
+{% include 'modals/edit_inventory.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

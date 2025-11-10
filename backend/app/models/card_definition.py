@@ -42,6 +42,7 @@ class CardDefinitionModel:
             'year': data['year'],
             'brand': data['brand'],
             'imgbb_url': data['imgbb_url'],
+            'archived': False,  # Soft delete flag
         }
 
         # Optional common fields
