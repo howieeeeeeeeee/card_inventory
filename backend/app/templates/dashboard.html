@@ -325,7 +325,7 @@ async function loadFilterOptions() {
 
 // Update filters when type or brand changes
 function updateFilters() {
-    loadFilterOptions();
+    document.getElementById('filterForm').submit();
 }
 </script>
 {% endblock %}

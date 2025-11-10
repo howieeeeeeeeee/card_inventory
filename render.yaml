@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: card-inventory
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn main:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: MONGODB_URI
+        sync: false
+      - key: IMGBB_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: False

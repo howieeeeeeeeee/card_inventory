@@ -42,7 +42,7 @@ class InventoryItemModel:
 
         # Optional basic fields
         optional_fields = [
-            'serial_number', 'condition', 'defects', 'personal_grade',
+            'custom_id', 'serial_number', 'condition', 'defects', 'personal_grade',
             'is_graded', 'is_in_taiwan', 'notes'
         ]
         for field in optional_fields:
@@ -71,13 +71,8 @@ class InventoryItemModel:
         # Update timestamp
         data['updated_at'] = datetime.utcnow()
 
-        # Handle grading array updates
-        if 'grading' in data:
-            # If grading is provided, merge with existing
-            if 'grading' not in existing:
-                existing['grading'] = []
-            # This allows adding new grading entries
-            data['grading'] = existing['grading'] + data['grading']
+        # Grading array is replaced entirely (not merged)
+        # This allows users to add, edit, or remove grading entries
 
         return data
 

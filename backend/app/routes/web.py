@@ -171,6 +171,7 @@ def create_inventory():
         data = {
             'card_definition_id': request.form.get('card_definition_id'),
             'status': request.form.get('status', 'in_stock'),
+            'custom_id': request.form.get('custom_id', ''),
             'serial_number': request.form.get('serial_number', ''),
             'condition': request.form.get('condition', ''),
             'defects': request.form.get('defects', ''),
@@ -228,6 +229,7 @@ def update_inventory(item_id):
         # Get update data
         data = {
             'status': request.form.get('status'),
+            'custom_id': request.form.get('custom_id', ''),
             'serial_number': request.form.get('serial_number', ''),
             'condition': request.form.get('condition', ''),
             'personal_grade': request.form.get('personal_grade', ''),
@@ -247,6 +249,44 @@ def update_inventory(item_id):
 
         if acquisition:
             data['acquisition'] = acquisition
+
+        # Handle grading history if status is not sold
+        if data['status'] != 'sold':
+            grading = []
+            # Parse grading entries from form data
+            # Form fields come as grading[0][type], grading[0][fee], etc.
+            grading_indices = set()
+            for key in request.form.keys():
+                if key.startswith('grading['):
+                    # Extract index from grading[0][field]
+                    index = key.split('[')[1].split(']')[0]
+                    grading_indices.add(index)
+
+            # Build grading array
+            for index in sorted(grading_indices):
+                grading_entry = {}
+                grading_type = request.form.get(f'grading[{index}][type]', '')
+                fee = request.form.get(f'grading[{index}][fee]', '')
+                date_submitted = request.form.get(f'grading[{index}][date_submitted]', '')
+                date_returned = request.form.get(f'grading[{index}][date_returned]', '')
+                result = request.form.get(f'grading[{index}][result]', '')
+
+                # Only add entry if at least one field is filled
+                if grading_type or fee or date_submitted or date_returned or result:
+                    if grading_type:
+                        grading_entry['type'] = grading_type
+                    if fee:
+                        grading_entry['fee'] = float(fee)
+                    if date_submitted:
+                        grading_entry['date_submitted'] = date_submitted
+                    if date_returned:
+                        grading_entry['date_returned'] = date_returned
+                    if result:
+                        grading_entry['result'] = result
+                    grading.append(grading_entry)
+
+            # Set grading array (replace existing)
+            data['grading'] = grading
 
         # Handle disposition if status is sold
         if data['status'] == 'sold':

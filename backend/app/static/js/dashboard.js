@@ -95,6 +95,7 @@ async function editInventoryItem(itemId) {
         // Populate basic fields
         document.getElementById('edit_item_id').value = item._id;
         document.getElementById('edit_status').value = item.status || 'in_stock';
+        document.getElementById('edit_custom_id').value = item.custom_id || '';
         document.getElementById('edit_serial_number').value = item.serial_number || '';
         document.getElementById('edit_condition').value = item.condition || '';
         document.getElementById('edit_personal_grade').value = item.personal_grade || '';
@@ -142,6 +143,9 @@ async function editInventoryItem(itemId) {
             document.getElementById('edit_disposition_income_receiver').value = '';
         }
 
+        // Load grading history
+        loadGradingHistory(item.grading || []);
+
         // Update form action
         document.getElementById('editInventoryForm').action = `/inventory/update/${itemId}`;
 
@@ -157,11 +161,89 @@ async function editInventoryItem(itemId) {
 function toggleEditDispositionSection() {
     const status = document.getElementById('edit_status').value;
     const dispositionSection = document.getElementById('edit_disposition_section');
+    const gradingSection = document.getElementById('edit_grading_section');
 
     if (status === 'sold') {
         dispositionSection.classList.remove('hidden');
+        if (gradingSection) {
+            gradingSection.classList.add('hidden');
+        }
     } else {
         dispositionSection.classList.add('hidden');
+        if (gradingSection) {
+            gradingSection.classList.remove('hidden');
+        }
+    }
+}
+
+// Grading History Management
+let gradingEntryCounter = 0;
+
+function addGradingEntry(gradingData = null) {
+    const gradingEntriesDiv = document.getElementById('grading_entries');
+    const entryId = gradingEntryCounter++;
+
+    const entry = document.createElement('div');
+    entry.className = 'border border-gray-200 rounded-lg p-4';
+    entry.id = `grading_entry_${entryId}`;
+
+    entry.innerHTML = `
+        <div class="flex justify-between items-start mb-3">
+            <h4 class="font-medium text-gray-900">Grading Entry ${entryId + 1}</h4>
+            <button type="button" onclick="removeGradingEntry(${entryId})" class="text-red-600 hover:text-red-700 text-sm">
+                Remove
+            </button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Grading Company</label>
+                <select name="grading[${entryId}][type]" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+                    <option value="">Select...</option>
+                    <option value="PSA" ${gradingData?.type === 'PSA' ? 'selected' : ''}>PSA</option>
+                    <option value="BGS" ${gradingData?.type === 'BGS' ? 'selected' : ''}>BGS</option>
+                    <option value="SGC" ${gradingData?.type === 'SGC' ? 'selected' : ''}>SGC</option>
+                    <option value="CGC" ${gradingData?.type === 'CGC' ? 'selected' : ''}>CGC</option>
+                    <option value="Other" ${gradingData?.type === 'Other' ? 'selected' : ''}>Other</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Fee ($)</label>
+                <input type="number" step="0.01" name="grading[${entryId}][fee]" value="${gradingData?.fee || ''}" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Date Submitted</label>
+                <input type="date" name="grading[${entryId}][date_submitted]" value="${gradingData?.date_submitted || ''}" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Date Returned</label>
+                <input type="date" name="grading[${entryId}][date_returned]" value="${gradingData?.date_returned || ''}" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+            </div>
+            <div class="col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Result/Grade</label>
+                <input type="text" name="grading[${entryId}][result]" value="${gradingData?.result || ''}" placeholder="e.g., PSA 10, BGS 9.5" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+            </div>
+        </div>
+    `;
+
+    gradingEntriesDiv.appendChild(entry);
+}
+
+function removeGradingEntry(entryId) {
+    const entry = document.getElementById(`grading_entry_${entryId}`);
+    if (entry) {
+        entry.remove();
+    }
+}
+
+function loadGradingHistory(gradingArray) {
+    const gradingEntriesDiv = document.getElementById('grading_entries');
+    gradingEntriesDiv.innerHTML = ''; // Clear existing entries
+    gradingEntryCounter = 0; // Reset counter
+
+    if (gradingArray && gradingArray.length > 0) {
+        gradingArray.forEach(grading => {
+            addGradingEntry(grading);
+        });
     }
 }
 

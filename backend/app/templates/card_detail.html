@@ -6,8 +6,8 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Back Button -->
     <div class="mb-6">
-        <a href="/" class="text-blue-600 hover:text-blue-700 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="/" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
             Back to Dashboard
@@ -25,9 +25,12 @@
                     <h1 class="text-2xl font-bold text-gray-900 mb-2">
                         {{ card.player_name or card.pokemon_name }}
                     </h1>
-                    <p class="text-lg text-gray-600 mb-4">
-                        {{ card.year }} {{ card.brand }}
-                    </p>
+                    <div class="space-y-1 mb-4">
+                        <p class="text-lg text-gray-600">{{ card.year }} {{ card.brand }}</p>
+                        {% if card.series %}
+                        <p class="text-sm text-gray-500">{{ card.series }}</p>
+                        {% endif %}
+                    </div>
 
                     <!-- Action Buttons -->
                     <div class="flex gap-2">
@@ -44,13 +47,6 @@
 
         <!-- Right Column - Card Details and Inventory -->
         <div class="lg:col-span-2 space-y-6">
-            <!-- Add Inventory Button -->
-            <div>
-                <button onclick="showModal('addInventoryModalDetail')" class="w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium">
-                    + Add Inventory Item
-                </button>
-            </div>
-
             <!-- Card Definition Details -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-4">Card Details</h2>
@@ -98,77 +94,186 @@
                 {% endif %}
             </div>
 
-            <!-- Inventory Items by Status -->
-            {% for status, status_name in [('in_stock', 'In Stock'), ('shipping', 'Shipping'), ('grading', 'Grading'), ('sold', 'Sold')] %}
-            {% set items = inventory_by_status.get(status, []) %}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-gray-900">
-                        {{ status_name }}
-                        <span class="text-sm font-normal text-gray-500">({{ items|length }})</span>
-                    </h2>
+            <!-- Add Inventory Button -->
+            <div>
+                <button onclick="showModal('addInventoryModalDetail')" class="w-full px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add Inventory Item
+                </button>
+            </div>
+
+            <!-- Inventory Items by Status - Tabbed Interface -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <!-- Tab Headers -->
+                <div class="border-b border-gray-200">
+                    <nav class="flex -mb-px" aria-label="Tabs">
+                        {% for status, status_name in [('in_stock', 'In Stock'), ('shipping', 'Shipping'), ('grading', 'Grading'), ('sold', 'Sold')] %}
+                        {% set items = inventory_by_status.get(status, []) %}
+                        <button
+                            onclick="switchTab('{{ status }}')"
+                            id="tab-{{ status }}"
+                            class="tab-button flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm transition-colors
+                            {% if status == 'in_stock' %}border-gray-900 text-gray-900{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %}"
+                        >
+                            {{ status_name }}
+                            <span class="ml-2 py-0.5 px-2 rounded-full text-xs font-medium
+                            {% if status == 'in_stock' %}bg-gray-900 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+                                {{ items|length }}
+                            </span>
+                        </button>
+                        {% endfor %}
+                    </nav>
                 </div>
 
-                {% if items %}
-                <div class="space-y-3">
-                    {% for item in items %}
-                    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <!-- Tab Content -->
+                {% for status, status_name in [('in_stock', 'In Stock'), ('shipping', 'Shipping'), ('grading', 'Grading'), ('sold', 'Sold')] %}
+                {% set items = inventory_by_status.get(status, []) %}
+                <div id="content-{{ status }}" class="tab-content p-6 {% if status != 'in_stock' %}hidden{% endif %}">
+                    {% if items %}
+                    <div class="space-y-3">
+                        {% for item in items %}
+                    <div class="inventory-item-card group relative border border-gray-200 rounded-lg p-5 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer border-l-4
+                    {% if status == 'in_stock' %}border-l-blue-400 bg-blue-50/30{% elif status == 'shipping' %}border-l-amber-400 bg-amber-50/30{% elif status == 'grading' %}border-l-purple-400 bg-purple-50/30{% elif status == 'sold' %}border-l-green-500 bg-green-50/30{% endif %}"
+                    onclick="viewInventoryItem('{{ item._id }}')">
                         <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3 mb-2">
+                            <div class="flex-1 space-y-3">
+                                <!-- Header Row: Serial Number and Badges -->
+                                <div class="flex items-center gap-2 flex-wrap">
                                     {% if item.serial_number %}
-                                    <span class="font-semibold text-gray-900">#{{ item.serial_number }}</span>
+                                    <span class="inline-flex items-center gap-1 font-semibold text-gray-900 text-base">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                                        </svg>
+                                        {{ item.serial_number }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-sm text-gray-400 italic">No serial number</span>
                                     {% endif %}
-                                    {% if item.condition %}
-                                    <span class="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded">Condition: {{ item.condition }}</span>
-                                    {% endif %}
-                                    {% if item.personal_grade %}
-                                    <span class="text-sm text-gray-600">Grade: {{ item.personal_grade }}</span>
-                                    {% endif %}
-                                </div>
 
-                                {% if item.notes %}
-                                <p class="text-sm text-gray-600 mb-2">{{ item.notes }}</p>
-                                {% endif %}
-
-                                <div class="flex gap-4 text-xs text-gray-500">
                                     {% if item.is_graded %}
-                                    <span class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <span class="inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full font-medium">
+                                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                         </svg>
                                         Graded
                                     </span>
                                     {% endif %}
-                                    {% if item.is_in_taiwan %}
-                                    <span>📍 Taiwan</span>
-                                    {% endif %}
-                                    {% if item.acquisition and item.acquisition.total_cost %}
-                                    <span>Cost: ${{ item.acquisition.total_cost }}</span>
-                                    {% endif %}
-                                    {% if item.disposition and item.disposition.revenue %}
-                                    <span>Sold: ${{ item.disposition.revenue }}</span>
+
+                                    {% if status != 'sold' and item.is_in_taiwan %}
+                                    <span class="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-medium">
+                                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Taiwan
+                                    </span>
                                     {% endif %}
                                 </div>
+
+                                <!-- Main Info Grid -->
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+                                    {% if item.condition %}
+                                    <div>
+                                        <span class="text-gray-500">Condition:</span>
+                                        <span class="ml-1.5 font-medium text-gray-900">{{ item.condition }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if item.personal_grade %}
+                                    <div>
+                                        <span class="text-gray-500">Personal Grade:</span>
+                                        <span class="ml-1.5 font-medium text-blue-600">{{ item.personal_grade }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if item.acquisition and item.acquisition.total_cost %}
+                                    <div>
+                                        <span class="text-gray-500">Cost:</span>
+                                        <span class="ml-1.5 font-semibold text-gray-900">${{ item.acquisition.total_cost }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if status == 'sold' and item.disposition and item.disposition.revenue %}
+                                    <div>
+                                        <span class="text-gray-500">Sold For:</span>
+                                        <span class="ml-1.5 font-semibold text-green-600">${{ item.disposition.revenue }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if item.acquisition and item.acquisition.acquiredFrom %}
+                                    <div>
+                                        <span class="text-gray-500">From:</span>
+                                        <span class="ml-1.5 text-gray-700">{{ item.acquisition.acquiredFrom }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if item.acquisition and item.acquisition.date %}
+                                    <div>
+                                        <span class="text-gray-500">Acquired:</span>
+                                        <span class="ml-1.5 text-gray-700">{{ item.acquisition.date }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Defects Warning (if any) -->
+                                {% if item.defects %}
+                                <div class="pt-2 border-t border-gray-100">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <div class="flex-1">
+                                            <span class="text-xs font-medium text-amber-700">Defects:</span>
+                                            <p class="text-xs text-amber-600 mt-0.5">{{ item.defects }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Notes (if any) -->
+                                {% if item.notes %}
+                                <div class="pt-2 border-t border-gray-100">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                                        </svg>
+                                        <p class="text-xs text-gray-600 flex-1">{{ item.notes }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
 
-                            <div class="flex gap-2">
-                                <button onclick="editInventoryItem('{{ item._id }}')" class="px-3 py-1 text-xs bg-gray-900 text-white rounded hover:bg-gray-800 transition-colors">
-                                    Edit
+                            <!-- Hover Actions Menu -->
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2" onclick="event.stopPropagation()">
+                                <button onclick="editInventoryItem('{{ item._id }}')" class="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm" title="Edit">
+                                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
                                 </button>
-                                <button onclick="archiveInventory('{{ item._id }}')" class="px-3 py-1 text-xs bg-white text-gray-900 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
-                                    Archive
+                                {% if status != 'sold' %}
+                                <button onclick="markAsSold('{{ item._id }}')" class="p-2 bg-white border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors shadow-sm" title="Mark as Sold">
+                                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </button>
+                                {% endif %}
+                                <button onclick="archiveInventory('{{ item._id }}')" class="p-2 bg-white border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors shadow-sm" title="Archive">
+                                    <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 text-center py-8">No items in this status</p>
+                    {% endif %}
                 </div>
-                {% else %}
-                <p class="text-gray-500 text-center py-8">No items in this status</p>
-                {% endif %}
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </div>
 </div>
@@ -252,8 +357,16 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Update Card Image (optional)</label>
-                <input type="file" name="image" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Update Card Image (optional)</label>
+                <div class="relative">
+                    <input type="file" name="image" accept="image/*" id="edit_card_image" class="hidden">
+                    <label for="edit_card_image" class="flex items-center justify-center gap-2 w-full px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="text-sm text-gray-600" id="edit_file_name">Choose a file or drag and drop</span>
+                    </label>
+                </div>
                 <p class="text-xs text-gray-500 mt-1">Leave empty to keep current image</p>
             </div>
 
@@ -290,13 +403,8 @@
             <!-- Same fields as add_inventory.html but with card pre-selected -->
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="in_stock">In Stock</option>
-                        <option value="shipping">Shipping</option>
-                        <option value="grading">Grading</option>
-                        <option value="sold">Sold</option>
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Custom ID</label>
+                    <input type="text" name="custom_id" placeholder="Optional custom identifier" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Serial Number</label>
@@ -304,14 +412,30 @@
                 </div>
             </div>
 
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="in_stock">In Stock</option>
+                    <option value="shipping">Shipping</option>
+                    <option value="grading">Grading</option>
+                    <option value="sold">Sold</option>
+                </select>
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Condition</label>
-                    <input type="text" name="condition" placeholder="e.g., Near Mint" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Condition
+                        <span class="text-xs font-normal text-gray-500 ml-1">(e.g., PSA 10, BGS 9.5)</span>
+                    </label>
+                    <input type="text" name="condition" placeholder="PSA 10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Personal Grade</label>
-                    <input type="text" name="personal_grade" placeholder="e.g., 9.5" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Personal Grade
+                        <span class="text-xs font-normal text-gray-500 ml-1">(e.g., Near Mint, Mint)</span>
+                    </label>
+                    <input type="text" name="personal_grade" placeholder="Near Mint" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
             </div>
 
@@ -385,6 +509,101 @@
 <!-- Edit Inventory Item Modal -->
 {% include 'modals/edit_inventory.html' %}
 
+<!-- View Inventory Item Modal (Read-only) -->
+<div id="viewInventoryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-900">Inventory Item Details</h2>
+                <button onclick="hideModal('viewInventoryModal')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="viewInventoryContent" class="p-6 space-y-4">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+
+        <div class="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-between">
+            <button onclick="hideModal('viewInventoryModal')" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                Close
+            </button>
+            <button id="viewModalEditBtn" onclick="editFromView()" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                Edit Item
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Mark as Sold Modal -->
+<div id="markAsSoldModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-900">Mark Item as Sold</h2>
+                <button onclick="hideModal('markAsSoldModal')" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <form id="markAsSoldForm" method="POST" class="p-6 space-y-4">
+            <input type="hidden" name="status" value="sold">
+            <input type="hidden" id="sold_item_id" name="item_id">
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p class="text-sm text-blue-800">Enter the sale information below. This will update the item status to "Sold".</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sale Date *</label>
+                    <input type="date" name="disposition_date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Revenue *</label>
+                    <input type="number" step="0.01" name="disposition_revenue" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Processing Fee</label>
+                    <input type="number" step="0.01" name="disposition_processing_fee" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Shipping Fee</label>
+                    <input type="number" step="0.01" name="disposition_shipping_fee" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sales Tax Collected</label>
+                    <input type="number" step="0.01" name="disposition_sales_tax_collected" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Income Receiver</label>
+                    <input type="text" name="disposition_income_receiver" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <button type="button" onclick="hideModal('markAsSoldModal')" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    Mark as Sold
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2" style="pointer-events: none;">
+    <!-- Toasts will be added here dynamically -->
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -439,5 +658,379 @@ function archiveInventory(itemId) {
             });
     }
 }
+
+// Update file name display
+document.getElementById('edit_card_image')?.addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name || 'Choose a file or drag and drop';
+    document.getElementById('edit_file_name').textContent = fileName;
+});
+
+// Toast Notification System
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.style.pointerEvents = 'auto';
+
+    const bgColors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500',
+        warning: 'bg-yellow-500'
+    };
+
+    const icons = {
+        success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
+        error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
+        info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'
+    };
+
+    toast.className = `${bgColors[type]} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 min-w-80 animate-slide-in`;
+    toast.innerHTML = `
+        <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            ${icons[type]}
+        </svg>
+        <span class="flex-1">${message}</span>
+        <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+// View Inventory Item (Read-only)
+let currentViewItemId = null;
+
+async function viewInventoryItem(itemId) {
+    try {
+        currentViewItemId = itemId;
+        const response = await fetch(`/api/inventory/${itemId}`);
+        const item = await response.json();
+
+        const content = document.getElementById('viewInventoryContent');
+        content.innerHTML = `
+            <div class="space-y-6">
+                <!-- Basic Info -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Basic Information</h3>
+                    <dl class="grid grid-cols-2 gap-4">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Status</dt>
+                            <dd class="mt-1 text-sm text-gray-900 capitalize">${item.status?.replace('_', ' ') || 'N/A'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Serial Number</dt>
+                            <dd class="mt-1 text-sm text-gray-900">${item.serial_number || 'N/A'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Condition</dt>
+                            <dd class="mt-1 text-sm text-gray-900">${item.condition || 'N/A'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Personal Grade</dt>
+                            <dd class="mt-1 text-sm text-gray-900">${item.personal_grade || 'N/A'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Is Graded</dt>
+                            <dd class="mt-1 text-sm text-gray-900">${item.is_graded ? 'Yes' : 'No'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">In Taiwan</dt>
+                            <dd class="mt-1 text-sm text-gray-900">${item.is_in_taiwan ? 'Yes' : 'No'}</dd>
+                        </div>
+                    </dl>
+                    ${item.defects ? `
+                        <div class="mt-4">
+                            <dt class="text-sm font-medium text-gray-500">Defects</dt>
+                            <dd class="mt-1 text-sm text-gray-900">${item.defects}</dd>
+                        </div>
+                    ` : ''}
+                    ${item.notes ? `
+                        <div class="mt-4">
+                            <dt class="text-sm font-medium text-gray-500">Notes</dt>
+                            <dd class="mt-1 text-sm text-gray-900">${item.notes}</dd>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <!-- Acquisition Info -->
+                ${item.acquisition ? `
+                    <div class="border-t pt-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Acquisition Information</h3>
+                        <dl class="grid grid-cols-2 gap-4">
+                            ${item.acquisition.date ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Date</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">${item.acquisition.date}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.acquisition.price ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Price</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">$${item.acquisition.price}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.acquisition.shipping ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Shipping</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">$${item.acquisition.shipping}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.acquisition.tax ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Tax</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">$${item.acquisition.tax}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.acquisition.total_cost ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Total Cost</dt>
+                                    <dd class="mt-1 text-sm font-semibold text-gray-900">$${item.acquisition.total_cost}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.acquisition.acquiredFrom ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Acquired From</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">${item.acquisition.acquiredFrom}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.acquisition.paid_by ? `
+                                <div class="col-span-2">
+                                    <dt class="text-sm font-medium text-gray-500">Paid By</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">${item.acquisition.paid_by}</dd>
+                                </div>
+                            ` : ''}
+                        </dl>
+                    </div>
+                ` : ''}
+
+                <!-- Grading History -->
+                ${item.grading && item.grading.length > 0 ? `
+                    <div class="border-t pt-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Grading History</h3>
+                        <div class="space-y-3">
+                            ${item.grading.map((grade, idx) => `
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <h4 class="font-medium text-gray-900 mb-2">Entry ${idx + 1}</h4>
+                                    <dl class="grid grid-cols-2 gap-3 text-sm">
+                                        ${grade.type ? `
+                                            <div>
+                                                <dt class="text-gray-500">Company</dt>
+                                                <dd class="text-gray-900 font-medium">${grade.type}</dd>
+                                            </div>
+                                        ` : ''}
+                                        ${grade.fee ? `
+                                            <div>
+                                                <dt class="text-gray-500">Fee</dt>
+                                                <dd class="text-gray-900">$${grade.fee}</dd>
+                                            </div>
+                                        ` : ''}
+                                        ${grade.date_submitted ? `
+                                            <div>
+                                                <dt class="text-gray-500">Submitted</dt>
+                                                <dd class="text-gray-900">${grade.date_submitted}</dd>
+                                            </div>
+                                        ` : ''}
+                                        ${grade.date_returned ? `
+                                            <div>
+                                                <dt class="text-gray-500">Returned</dt>
+                                                <dd class="text-gray-900">${grade.date_returned}</dd>
+                                            </div>
+                                        ` : ''}
+                                        ${grade.result ? `
+                                            <div class="col-span-2">
+                                                <dt class="text-gray-500">Result</dt>
+                                                <dd class="text-gray-900 font-semibold">${grade.result}</dd>
+                                            </div>
+                                        ` : ''}
+                                    </dl>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- Disposition/Sale Info -->
+                ${item.disposition ? `
+                    <div class="border-t pt-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Sale Information</h3>
+                        <dl class="grid grid-cols-2 gap-4">
+                            ${item.disposition.date ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Sale Date</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">${item.disposition.date}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.disposition.revenue ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Revenue</dt>
+                                    <dd class="mt-1 text-sm font-semibold text-green-600">$${item.disposition.revenue}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.disposition.processing_fee ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Processing Fee</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">$${item.disposition.processing_fee}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.disposition.shipping_fee ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Shipping Fee</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">$${item.disposition.shipping_fee}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.disposition.sales_tax_collected ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Sales Tax</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">$${item.disposition.sales_tax_collected}</dd>
+                                </div>
+                            ` : ''}
+                            ${item.disposition.income_receiver ? `
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Income Receiver</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">${item.disposition.income_receiver}</dd>
+                                </div>
+                            ` : ''}
+                        </dl>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+        showModal('viewInventoryModal');
+    } catch (error) {
+        console.error('Failed to load item:', error);
+        showToast('Failed to load item details', 'error');
+    }
+}
+
+function editFromView() {
+    hideModal('viewInventoryModal');
+    if (currentViewItemId) {
+        editInventoryItem(currentViewItemId);
+    }
+}
+
+// Mark as Sold
+function markAsSold(itemId) {
+    document.getElementById('sold_item_id').value = itemId;
+    document.getElementById('markAsSoldForm').action = `/inventory/update/${itemId}`;
+    showModal('markAsSoldModal');
+}
+
+// Handle form submissions with toast notifications
+document.getElementById('markAsSoldForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const itemId = document.getElementById('sold_item_id').value;
+
+    fetch(`/inventory/update/${itemId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            showToast('Item marked as sold successfully!', 'success');
+            hideModal('markAsSoldModal');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('Failed to update item', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to update item', 'error');
+    });
+});
+
+// Update archive function with toast
+function archiveInventory(itemId) {
+    if (confirm('Are you sure you want to archive this inventory item? It will be hidden but not deleted.')) {
+        fetch(`/inventory/archive/${itemId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Item archived successfully', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Failed to archive item', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Failed to archive item', 'error');
+            });
+    }
+}
+
+// Tab Switching Functionality
+function switchTab(status) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+
+    // Remove active state from all tabs
+    document.querySelectorAll('.tab-button').forEach(tab => {
+        tab.classList.remove('border-gray-900', 'text-gray-900');
+        tab.classList.add('border-transparent', 'text-gray-500');
+
+        // Update badge styling
+        const badge = tab.querySelector('span');
+        if (badge) {
+            badge.classList.remove('bg-gray-900', 'text-white');
+            badge.classList.add('bg-gray-100', 'text-gray-600');
+        }
+    });
+
+    // Show selected tab content
+    const selectedContent = document.getElementById(`content-${status}`);
+    if (selectedContent) {
+        selectedContent.classList.remove('hidden');
+    }
+
+    // Add active state to selected tab
+    const selectedTab = document.getElementById(`tab-${status}`);
+    if (selectedTab) {
+        selectedTab.classList.remove('border-transparent', 'text-gray-500');
+        selectedTab.classList.add('border-gray-900', 'text-gray-900');
+
+        // Update badge styling
+        const badge = selectedTab.querySelector('span');
+        if (badge) {
+            badge.classList.remove('bg-gray-100', 'text-gray-600');
+            badge.classList.add('bg-gray-900', 'text-white');
+        }
+    }
+}
+
+// Add CSS animation for toast
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slide-in {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    .animate-slide-in {
+        animation: slide-in 0.3s ease-out;
+    }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %}
