@@ -181,6 +181,27 @@ def create_inventory():
             'notes': request.form.get('notes', ''),
         }
 
+        # Handle item image upload
+        if 'item_image' in request.files:
+            image = request.files['item_image']
+            if image.filename:
+                # Upload to ImgBB
+                image_data = base64.b64encode(image.read()).decode('utf-8')
+                imgbb_url = 'https://api.imgbb.com/1/upload'
+                payload = {
+                    'key': Config.IMGBB_API_KEY,
+                    'image': image_data,
+                }
+                response = requests.post(imgbb_url, data=payload)
+                if response.status_code == 200:
+                    response_data = response.json()
+                    if response_data.get('success'):
+                        data['item_image_url'] = response_data['data']['url']
+                    else:
+                        flash('Failed to upload item image', 'error')
+                else:
+                    flash('Failed to upload item image', 'error')
+
         # Get acquisition data
         acquisition = {}
         acquisition_fields = ['date', 'price', 'shipping', 'tax', 'total_cost', 'acquiredFrom', 'paid_by']
@@ -226,18 +247,65 @@ def update_inventory(item_id):
             flash('Item not found', 'error')
             return redirect(url_for('web.index'))
 
-        # Get update data
-        data = {
-            'status': request.form.get('status'),
-            'custom_id': request.form.get('custom_id', ''),
-            'serial_number': request.form.get('serial_number', ''),
-            'condition': request.form.get('condition', ''),
-            'personal_grade': request.form.get('personal_grade', ''),
-            'defects': request.form.get('defects', ''),
-            'notes': request.form.get('notes', ''),
-            'is_graded': request.form.get('is_graded') == 'true',
-            'is_in_taiwan': request.form.get('is_in_taiwan') == 'true',
-        }
+        # Get update data - only update fields that are present in the form
+        # If a field is present but empty, we update it (allow clearing fields from edit form)
+        # If a field is not present at all, we preserve the existing value
+        data = {}
+
+        # Status is always updated if provided
+        if 'status' in request.form:
+            data['status'] = request.form.get('status')
+
+        # Text fields: only update if present in form (allows both setting and clearing)
+        if 'custom_id' in request.form:
+            data['custom_id'] = request.form.get('custom_id', '')
+
+        if 'serial_number' in request.form:
+            data['serial_number'] = request.form.get('serial_number', '')
+
+        if 'condition' in request.form:
+            data['condition'] = request.form.get('condition', '')
+
+        if 'personal_grade' in request.form:
+            data['personal_grade'] = request.form.get('personal_grade', '')
+
+        if 'defects' in request.form:
+            data['defects'] = request.form.get('defects', '')
+
+        if 'notes' in request.form:
+            data['notes'] = request.form.get('notes', '')
+
+        # Checkboxes: only update if present in form
+        if 'is_graded' in request.form:
+            data['is_graded'] = request.form.get('is_graded') == 'true'
+
+        if 'is_in_taiwan' in request.form:
+            data['is_in_taiwan'] = request.form.get('is_in_taiwan') == 'true'
+
+        # Handle item image upload
+        if 'item_image' in request.files:
+            image = request.files['item_image']
+            if image and image.filename:
+                try:
+                    # Upload to ImgBB
+                    image_data = base64.b64encode(image.read()).decode('utf-8')
+                    imgbb_url = 'https://api.imgbb.com/1/upload'
+                    payload = {
+                        'key': Config.IMGBB_API_KEY,
+                        'image': image_data,
+                    }
+                    response = requests.post(imgbb_url, data=payload)
+
+                    if response.status_code == 200:
+                        response_data = response.json()
+                        if response_data.get('success'):
+                            data['item_image_url'] = response_data['data']['url']
+                        else:
+                            flash(f'Item image upload failed: {response_data.get("error", {}).get("message", "Unknown error")}', 'error')
+                    else:
+                        flash(f'Item image upload failed with status {response.status_code}', 'error')
+                except Exception as img_error:
+                    flash(f'Item image upload error: {str(img_error)}', 'error')
 
         # Handle acquisition data
         acquisition = {}

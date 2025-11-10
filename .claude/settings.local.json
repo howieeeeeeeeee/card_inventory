@@ -15,7 +15,8 @@
       "Bash(pkill:*)",
       "Bash(python -c:*)",
       "Bash(python -m py_compile:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

@@ -137,7 +137,14 @@
                     <div class="inventory-item-card group relative border border-gray-200 rounded-lg p-5 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer border-l-4
                     {% if status == 'in_stock' %}border-l-blue-400 bg-blue-50/30{% elif status == 'shipping' %}border-l-amber-400 bg-amber-50/30{% elif status == 'grading' %}border-l-purple-400 bg-purple-50/30{% elif status == 'sold' %}border-l-green-500 bg-green-50/30{% endif %}"
                     onclick="viewInventoryItem('{{ item._id }}')">
-                        <div class="flex justify-between items-start">
+                        <div class="flex gap-4">
+                            <!-- Item Image (if exists) -->
+                            {% if item.item_image_url %}
+                            <div class="flex-shrink-0">
+                                <img src="{{ item.item_image_url }}" alt="Item image" class="w-24 h-24 object-cover rounded-lg border-2 border-gray-200">
+                            </div>
+                            {% endif %}
+
                             <div class="flex-1 space-y-3">
                                 <!-- Header Row: Serial Number and Badges -->
                                 <div class="flex items-center gap-2 flex-wrap">
@@ -720,6 +727,13 @@ async function viewInventoryItem(itemId) {
         const content = document.getElementById('viewInventoryContent');
         content.innerHTML = `
             <div class="space-y-6">
+                <!-- Item Image -->
+                ${item.item_image_url ? `
+                    <div class="flex justify-center">
+                        <img src="${item.item_image_url}" alt="Item image" class="max-w-md w-full h-auto object-contain rounded-lg border-2 border-gray-200">
+                    </div>
+                ` : ''}
+
                 <!-- Basic Info -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 mb-3">Basic Information</h3>
@@ -918,6 +932,28 @@ function editFromView() {
     hideModal('viewInventoryModal');
     if (currentViewItemId) {
         editInventoryItem(currentViewItemId);
+    }
+}
+
+// Validate edit form before submission
+function validateEditForm() {
+    const form = document.getElementById('editInventoryForm');
+    if (!form.action || form.action.includes('placeholder')) {
+        alert('Error: Form action not properly set. Please try again.');
+        console.error('Edit form action:', form.action);
+        return false;
+    }
+    console.log('Form submitting to:', form.action);
+    return true;
+}
+
+// Update file name display for edit form
+function updateEditFileName(input) {
+    const fileNameSpan = document.getElementById('edit_file_name');
+    if (input.files && input.files[0]) {
+        fileNameSpan.textContent = input.files[0].name;
+    } else {
+        fileNameSpan.textContent = 'No file chosen';
     }
 }
 

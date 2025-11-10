@@ -146,8 +146,24 @@ async function editInventoryItem(itemId) {
         // Load grading history
         loadGradingHistory(item.grading || []);
 
+        // Handle current item image display
+        const currentImageDisplay = document.getElementById('edit_current_image_display');
+        const currentImage = document.getElementById('edit_current_image');
+        if (item.item_image_url) {
+            currentImage.src = item.item_image_url;
+            currentImageDisplay.classList.remove('hidden');
+        } else {
+            currentImageDisplay.classList.add('hidden');
+        }
+
+        // Reset file input
+        document.getElementById('edit_item_image').value = '';
+        document.getElementById('edit_file_name').textContent = 'No file chosen';
+
         // Update form action
-        document.getElementById('editInventoryForm').action = `/inventory/update/${itemId}`;
+        const form = document.getElementById('editInventoryForm');
+        form.action = `/inventory/update/${itemId}`;
+        console.log('Form action set to:', form.action);
 
         // Show modal
         showModal('editInventoryModal');

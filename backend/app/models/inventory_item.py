@@ -43,7 +43,7 @@ class InventoryItemModel:
         # Optional basic fields
         optional_fields = [
             'custom_id', 'serial_number', 'condition', 'defects', 'personal_grade',
-            'is_graded', 'is_in_taiwan', 'notes'
+            'is_graded', 'is_in_taiwan', 'notes', 'item_image_url'
         ]
         for field in optional_fields:
             if field in data:
