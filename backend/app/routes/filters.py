@@ -30,7 +30,9 @@ def get_filter_options():
             'series': [],
             'years': [],
             'players': [],
-            'pokemon': []
+            'pokemon': [],
+            'languages': [],
+            'eras': []
         }
 
         # Get all card types
@@ -64,6 +66,14 @@ def get_filter_options():
             pokemon_query['card_type'] = 'pokemon'
             pokemon_list = collection.distinct('pokemon_name', pokemon_query)
             result['pokemon'] = sorted([p for p in pokemon_list if p])
+
+            # Get languages for pokemon cards
+            language_list = collection.distinct('language', pokemon_query)
+            result['languages'] = sorted([l for l in language_list if l])
+
+            # Get eras for pokemon cards
+            era_list = collection.distinct('era', pokemon_query)
+            result['eras'] = sorted([e for e in era_list if e])
 
         return jsonify(result), 200
 

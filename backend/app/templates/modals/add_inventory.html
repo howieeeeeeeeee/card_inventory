@@ -240,23 +240,30 @@
                 {% for card in all_definitions %}
                 <div
                     class="card-selector-item cursor-pointer group border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all hover:border-gray-900"
-                    onclick="selectCard('{{ card._id }}', '{{ card.imgbb_url }}', '{{ card.player_name or card.pokemon_name }}', '{{ card.year }} {{ card.brand }}')"
-                    data-search="{{ (card.player_name or card.pokemon_name)|lower }} {{ card.brand|lower }} {{ card.year }} {{ card.series|lower if card.series else '' }}"
+                    onclick="selectCard('{{ card._id }}', '{{ card.imgbb_url }}', '{{ card.player_name or card.pokemon_name }}', '{% if card.card_type == "sport" %}{{ card.year }}{% if card.brand %} · {{ card.brand }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}{% elif card.card_type == "pokemon" %}{{ card.year }}{% if card.language %} · {{ card.language }}{% endif %}{% if card.era %} · {{ card.era }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}{% else %}{{ card.year }} {{ card.brand }}{% endif %}', '{{ card.card_type }}')"
+                    data-search="{{ (card.player_name or card.pokemon_name)|lower }} {{ card.brand|lower }} {{ card.year }} {{ card.series|lower if card.series else '' }} {{ card.language|lower if card.language else '' }} {{ card.era|lower if card.era else '' }}"
                     data-type="{{ card.card_type }}"
                     data-brand="{{ card.brand|lower }}"
                     data-series="{{ card.series|lower if card.series else '' }}"
                     data-year="{{ card.year }}"
                     data-name="{{ (card.player_name or card.pokemon_name)|lower }}"
+                    data-language="{{ card.language|lower if card.language else '' }}"
+                    data-era="{{ card.era|lower if card.era else '' }}"
                 >
                     <div class="aspect-[3/4] bg-gray-100">
                         <img src="{{ card.imgbb_url }}" alt="{{ card.player_name or card.pokemon_name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
                     </div>
                     <div class="p-2 bg-white">
                         <p class="font-medium text-sm text-gray-900 truncate">{{ card.player_name or card.pokemon_name }}</p>
-                        <p class="text-xs text-gray-500 truncate">{{ card.year }} {{ card.brand }}</p>
-                        {% if card.series %}
-                        <p class="text-xs text-gray-400 truncate">{{ card.series }}</p>
-                        {% endif %}
+                        <p class="text-xs text-gray-500 truncate">
+                            {% if card.card_type == 'sport' %}
+                                {{ card.year }}{% if card.brand %} · {{ card.brand }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}
+                            {% elif card.card_type == 'pokemon' %}
+                                {{ card.year }}{% if card.language %} · {{ card.language }}{% endif %}{% if card.era %} · {{ card.era }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}
+                            {% else %}
+                                {{ card.year }} {{ card.brand }}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
                 {% endfor %}
@@ -275,7 +282,7 @@ function openCardSelector() {
     }
 }
 
-function selectCard(cardId, imgUrl, cardName, cardInfo) {
+function selectCard(cardId, imgUrl, cardName, cardInfo, cardType) {
     // Set the hidden field value
     document.getElementById('selected_card_id').value = cardId;
 

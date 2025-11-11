@@ -26,10 +26,15 @@
                         {{ card.player_name or card.pokemon_name }}
                     </h1>
                     <div class="space-y-1 mb-4">
-                        <p class="text-lg text-gray-600">{{ card.year }} {{ card.brand }}</p>
-                        {% if card.series %}
-                        <p class="text-sm text-gray-500">{{ card.series }}</p>
-                        {% endif %}
+                        <p class="text-lg text-gray-600">
+                            {% if card.card_type == 'sport' %}
+                                {{ card.year }}{% if card.brand %} · {{ card.brand }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}
+                            {% elif card.card_type == 'pokemon' %}
+                                {{ card.year }}{% if card.language %} · {{ card.language }}{% endif %}{% if card.era %} · {{ card.era }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}
+                            {% else %}
+                                {{ card.year }} {{ card.brand }}
+                            {% endif %}
+                        </p>
                     </div>
 
                     <!-- Action Buttons -->
@@ -155,8 +160,6 @@
                                         </svg>
                                         {{ item.serial_number }}
                                     </span>
-                                    {% else %}
-                                    <span class="text-sm text-gray-400 italic">No serial number</span>
                                     {% endif %}
 
                                     {% if item.is_graded %}
@@ -742,18 +745,24 @@ async function viewInventoryItem(itemId) {
                             <dt class="text-sm font-medium text-gray-500">Status</dt>
                             <dd class="mt-1 text-sm text-gray-900 capitalize">${item.status?.replace('_', ' ') || 'N/A'}</dd>
                         </div>
+                        ${item.serial_number ? `
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Serial Number</dt>
-                            <dd class="mt-1 text-sm text-gray-900">${item.serial_number || 'N/A'}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">${item.serial_number}</dd>
                         </div>
+                        ` : ''}
+                        ${item.condition ? `
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Condition</dt>
-                            <dd class="mt-1 text-sm text-gray-900">${item.condition || 'N/A'}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">${item.condition}</dd>
                         </div>
+                        ` : ''}
+                        ${item.personal_grade ? `
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Personal Grade</dt>
-                            <dd class="mt-1 text-sm text-gray-900">${item.personal_grade || 'N/A'}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">${item.personal_grade}</dd>
                         </div>
+                        ` : ''}
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Is Graded</dt>
                             <dd class="mt-1 text-sm text-gray-900">${item.is_graded ? 'Yes' : 'No'}</dd>

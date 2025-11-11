@@ -44,6 +44,16 @@ def index():
     if year:
         filter_query['year'] = year
 
+    # Filter by language (pokemon-specific)
+    language = request.args.get('language', '')
+    if language:
+        filter_query['language'] = language
+
+    # Filter by era (pokemon-specific)
+    era = request.args.get('era', '')
+    if era:
+        filter_query['era'] = era
+
     # Filter by player/pokemon name
     name = request.args.get('name', '')
     if name:
