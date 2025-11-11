@@ -140,7 +140,13 @@
                                 {{ card.player_name or card.pokemon_name }}
                             </h3>
                             <p class="text-xs text-gray-500 mb-2 truncate">
-                                {{ card.year }} {{ card.brand }}
+                                {% if card.card_type == 'sport' %}
+                                    {{ card.year }}{% if card.brand %}.{{ card.brand }}{% endif %}{% if card.series %}.{{ card.series }}{% endif %}
+                                {% elif card.card_type == 'pokemon' %}
+                                    {{ card.year }}{% if card.language %}.{{ card.language }}{% endif %}{% if card.era %}.{{ card.era }}{% endif %}{% if card.series %}.{{ card.series }}{% endif %}
+                                {% else %}
+                                    {{ card.year }} {{ card.brand }}
+                                {% endif %}
                             </p>
                             <div class="flex gap-1 text-xs">
                                 <span class="px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded flex items-center gap-0.5" title="In Stock">
@@ -180,8 +186,13 @@
                                     {{ card.player_name or card.pokemon_name }}
                                 </h3>
                                 <p class="text-sm text-gray-600 mb-2">
-                                    {{ card.year }} {{ card.brand }}
-                                    {% if card.series %} • {{ card.series }}{% endif %}
+                                    {% if card.card_type == 'sport' %}
+                                        {{ card.year }}{% if card.brand %}.{{ card.brand }}{% endif %}{% if card.series %}.{{ card.series }}{% endif %}
+                                    {% elif card.card_type == 'pokemon' %}
+                                        {{ card.year }}{% if card.language %}.{{ card.language }}{% endif %}{% if card.era %}.{{ card.era }}{% endif %}{% if card.series %}.{{ card.series }}{% endif %}
+                                    {% else %}
+                                        {{ card.year }} {{ card.brand }}{% if card.series %} • {{ card.series }}{% endif %}
+                                    {% endif %}
                                     {% if card.insert_parallel %} • {{ card.insert_parallel }}{% endif %}
                                 </p>
                                 <div class="flex gap-4 text-xs text-gray-500">
