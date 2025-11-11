@@ -193,23 +193,33 @@ def create_inventory():
         # Handle item image upload
         if 'item_image' in request.files:
             image = request.files['item_image']
-            if image.filename:
-                # Upload to ImgBB
-                image_data = base64.b64encode(image.read()).decode('utf-8')
-                imgbb_url = 'https://api.imgbb.com/1/upload'
-                payload = {
-                    'key': Config.IMGBB_API_KEY,
-                    'image': image_data,
-                }
-                response = requests.post(imgbb_url, data=payload)
-                if response.status_code == 200:
-                    response_data = response.json()
-                    if response_data.get('success'):
-                        data['item_image_url'] = response_data['data']['url']
+            if image and image.filename:
+                try:
+                    # Upload to ImgBB
+                    image_data = base64.b64encode(image.read()).decode('utf-8')
+                    imgbb_url = 'https://api.imgbb.com/1/upload'
+
+                    if not Config.IMGBB_API_KEY:
+                        flash('ImgBB API key is not configured', 'error')
                     else:
-                        flash('Failed to upload item image', 'error')
-                else:
-                    flash('Failed to upload item image', 'error')
+                        payload = {
+                            'key': Config.IMGBB_API_KEY,
+                            'image': image_data,
+                        }
+                        response = requests.post(imgbb_url, data=payload)
+
+                        if response.status_code == 200:
+                            response_data = response.json()
+                            if response_data.get('success'):
+                                data['item_image_url'] = response_data['data']['url']
+                                flash('Item image uploaded successfully!', 'success')
+                            else:
+                                error_msg = response_data.get('error', {}).get('message', 'Unknown error')
+                                flash(f'Failed to upload item image: {error_msg}', 'error')
+                        else:
+                            flash(f'Failed to upload item image (Status: {response.status_code})', 'error')
+                except Exception as img_error:
+                    flash(f'Error uploading item image: {str(img_error)}', 'error')
 
         # Get acquisition data
         acquisition = {}
@@ -536,6 +546,25 @@ def archive_definition(definition_id):
             return {'success': True}, 200
         else:
             return {'success': False, 'error': 'Card not found'}, 404
+
+    except Exception as e:
+        return {'success': False, 'error': str(e)}, 500
+
+
+@web_bp.route('/inventory/<item_id>/delete-image', methods=['POST'])
+def delete_inventory_image(item_id):
+    """Delete the image from an inventory item"""
+    try:
+        collection = get_inventory_items_collection()
+        result = collection.update_one(
+            {'_id': ObjectId(item_id)},
+            {'$unset': {'item_image_url': ''}}
+        )
+
+        if result.modified_count > 0:
+            return {'success': True, 'message': 'Image deleted successfully'}, 200
+        else:
+            return {'success': False, 'error': 'Item not found or no image to delete'}, 404
 
     except Exception as e:
         return {'success': False, 'error': str(e)}, 500

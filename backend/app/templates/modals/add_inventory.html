@@ -1,8 +1,8 @@
-<div id="addInventoryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+<div id="addInventoryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+    <div class="bg-white rounded-lg sm:rounded-xl shadow-xl max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
             <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-gray-900">Add Inventory Item</h2>
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Add Inventory Item</h2>
                 <button onclick="hideModal('addInventoryModal')" class="text-gray-500 hover:text-gray-700">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -11,7 +11,7 @@
             </div>
         </div>
 
-        <form action="/inventory/create" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+        <form action="/inventory/create" method="POST" enctype="multipart/form-data" class="p-4 sm:p-6 space-y-3 sm:space-y-4">
             <!-- Select Card Definition -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Card Definition *</label>
@@ -162,11 +162,11 @@
 </div>
 
 <!-- Card Selector Modal -->
-<div id="cardSelectorModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-    <div class="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+<div id="cardSelectorModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-2 sm:p-4">
+    <div class="bg-white rounded-lg sm:rounded-xl shadow-xl max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
             <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-gray-900">Select Card</h2>
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Select Card</h2>
                 <button onclick="hideModal('cardSelectorModal')" class="text-gray-500 hover:text-gray-700">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -288,8 +288,8 @@
             </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6">
-            <div id="cardSelectorGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div class="flex-1 overflow-y-auto p-3 sm:p-6">
+            <div id="cardSelectorGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                 {% for card in all_definitions %}
                 <div
                     class="card-selector-item cursor-pointer group border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all hover:border-gray-900"

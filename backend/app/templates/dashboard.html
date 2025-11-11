@@ -5,32 +5,40 @@
     <!-- Header with Actions -->
     <div class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
-                    <h1 class="text-2xl font-semibold text-gray-900">Card Inventory</h1>
+                    <h1 class="text-xl md:text-2xl font-semibold text-gray-900">A2Z Cards Inventory</h1>
                     <p class="text-sm text-gray-500 mt-1">{{ cards|length }} cards</p>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="showModal('addDefinitionModal')" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium">
-                        Add Card
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="showModal('addDefinitionModal')"
+                        class="flex-1 sm:flex-none px-3 md:px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-xs md:text-sm font-medium">
+                        <span class="hidden sm:inline">Add Card</span>
+                        <span class="sm:hidden">+ Card</span>
                     </button>
-                    <button onclick="showModal('addInventoryModal')" class="px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
-                        Add Inventory
+                    <button onclick="showModal('addInventoryModal')"
+                        class="flex-1 sm:flex-none px-3 md:px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-xs md:text-sm font-medium">
+                        <span class="hidden sm:inline">Add Inventory</span>
+                        <span class="sm:hidden">+ Inventory</span>
                     </button>
                 </div>
             </div>
 
             <!-- View Toggle -->
             <div class="flex items-center gap-2 mb-4">
-                <button id="cardViewBtn" onclick="switchView('card')" class="px-3 py-1.5 bg-gray-900 text-white rounded-md text-sm font-medium">
+                <button id="cardViewBtn" onclick="switchView('card')"
+                    class="px-3 py-1.5 bg-gray-900 text-white rounded-md text-sm font-medium">
                     <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                     Cards
                 </button>
-                <button id="listViewBtn" onclick="switchView('list')" class="px-3 py-1.5 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50">
+                <button id="listViewBtn" onclick="switchView('list')"
+                    class="px-3 py-1.5 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50">
                     <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                     List
                 </button>
@@ -40,21 +48,20 @@
             <form id="filterForm" method="GET" action="/">
                 <!-- Search Bar -->
                 <div class="mb-3">
-                    <input
-                        type="text"
-                        name="q"
-                        value="{{ request.args.get('q', '') }}"
-                        placeholder="Search cards..."
-                        class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                    />
+                    <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Search cards..."
+                        class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm" />
                 </div>
 
                 <!-- Advanced Filters (Expandable) -->
-                <details class="bg-gray-50 rounded-lg border border-gray-200" {% if request.args.get('type') or request.args.get('brand') or request.args.get('series') or request.args.get('year') or request.args.get('name') or request.args.get('language') or request.args.get('era') %}open{% endif %}>
-                    <summary class="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center justify-between">
+                <details class="bg-gray-50 rounded-lg border border-gray-200" {% if request.args.get('type') or
+                    request.args.get('brand') or request.args.get('series') or request.args.get('year') or
+                    request.args.get('name') or request.args.get('language') or request.args.get('era') %}open{% endif
+                    %}>
+                    <summary
+                        class="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center justify-between">
                         <span>Advanced Filters</span>
                         <svg class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </summary>
 
@@ -62,15 +69,13 @@
                         <!-- Card Type Selection -->
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Card Type</label>
-                            <select
-                                name="type"
-                                id="typeFilter"
-                                onchange="handleTypeChange()"
-                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                            >
+                            <select name="type" id="typeFilter" onchange="handleTypeChange()"
+                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm">
                                 <option value="">All Types</option>
-                                <option value="sport" {% if request.args.get('type') == 'sport' %}selected{% endif %}>Sport</option>
-                                <option value="pokemon" {% if request.args.get('type') == 'pokemon' %}selected{% endif %}>Pokemon</option>
+                                <option value="sport" {% if request.args.get('type')=='sport' %}selected{% endif %}>
+                                    Sport</option>
+                                <option value="pokemon" {% if request.args.get('type')=='pokemon' %}selected{% endif %}>
+                                    Pokemon</option>
                             </select>
                         </div>
 
@@ -79,31 +84,22 @@
                             <label class="block text-xs font-medium text-gray-700 mb-2">Common</label>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div>
-                                    <select
-                                        name="year"
-                                        onchange="document.getElementById('filterForm').submit()"
-                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                                    >
+                                    <select name="year" onchange="document.getElementById('filterForm').submit()"
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm">
                                         <option value="">All Years</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <select
-                                        name="series"
-                                        id="seriesFilter"
+                                    <select name="series" id="seriesFilter"
                                         onchange="document.getElementById('filterForm').submit()"
-                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                                    >
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm">
                                         <option value="">All Series</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <select
-                                        name="name"
-                                        id="nameFilter"
+                                    <select name="name" id="nameFilter"
                                         onchange="document.getElementById('filterForm').submit()"
-                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                                    >
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm">
                                         <option value="">All Names</option>
                                     </select>
                                 </div>
@@ -115,12 +111,8 @@
                             <label class="block text-xs font-medium text-gray-700 mb-2">Sport Cards</label>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                    <select
-                                        name="brand"
-                                        id="brandFilter"
-                                        onchange="updateFilters()"
-                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                                    >
+                                    <select name="brand" id="brandFilter" onchange="updateFilters()"
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm">
                                         <option value="">All Brands</option>
                                     </select>
                                 </div>
@@ -132,22 +124,16 @@
                             <label class="block text-xs font-medium text-gray-700 mb-2">Pokemon Cards</label>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                    <select
-                                        name="language"
-                                        id="languageFilter"
+                                    <select name="language" id="languageFilter"
                                         onchange="document.getElementById('filterForm').submit()"
-                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                                    >
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm">
                                         <option value="">All Languages</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <select
-                                        name="era"
-                                        id="eraFilter"
+                                    <select name="era" id="eraFilter"
                                         onchange="document.getElementById('filterForm').submit()"
-                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                                    >
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm">
                                         <option value="">All Eras</option>
                                     </select>
                                 </div>
@@ -156,7 +142,8 @@
 
                         <!-- Clear Filters -->
                         <div class="flex items-center justify-end pt-2">
-                            <a href="/" class="text-sm text-gray-600 hover:text-gray-900 underline">Clear all filters</a>
+                            <a href="/" class="text-sm text-gray-600 hover:text-gray-900 underline">Clear all
+                                filters</a>
                         </div>
                     </div>
                 </details>
@@ -167,99 +154,111 @@
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {% if cards %}
-            <!-- Card View -->
-            <div id="cardView" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {% for card in cards %}
-                <a href="/card/{{ card._id }}" class="group">
-                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200">
-                        <div class="aspect-[3/4] bg-gray-100 overflow-hidden">
-                            <img src="{{ card.imgbb_url }}" alt="{{ card.player_name or card.pokemon_name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+        <!-- Card View -->
+        <div id="cardView" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {% for card in cards %}
+            <a href="/card/{{ card._id }}" class="group">
+                <div
+                    class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200">
+                    <div class="aspect-[3/4] bg-gray-100 overflow-hidden">
+                        <img src="{{ card.imgbb_url }}" alt="{{ card.player_name or card.pokemon_name }}"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-gray-900 text-sm mb-1 truncate">
+                            {{ card.player_name or card.pokemon_name }}
+                        </h3>
+                        <p class="text-xs text-gray-500 mb-2 truncate">
+                            {% if card.card_type == 'sport' %}
+                            {{ card.year }}{% if card.brand %} · {{ card.brand }}{% endif %}{% if card.series %} · {{
+                            card.series }}{% endif %}
+                            {% elif card.card_type == 'pokemon' %}
+                            {{ card.year }}{% if card.language %} · {{ card.language }}{% endif %}{% if card.era %} · {{
+                            card.era }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}
+                            {% else %}
+                            {{ card.year }} {{ card.brand }}
+                            {% endif %}
+                        </p>
+                        <div class="flex gap-1 text-xs">
+                            <span class="px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded flex items-center gap-0.5"
+                                title="In Stock">
+                                <span class="material-icons" style="font-size: 14px;">inventory_2</span>
+                                {{ card.counts.in_stock }}
+                            </span>
+                            <span class="px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded flex items-center gap-0.5"
+                                title="Grading">
+                                <span class="material-icons" style="font-size: 14px;">grade</span>
+                                {{ card.counts.grading }}
+                            </span>
+                            <span class="px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded flex items-center gap-0.5"
+                                title="Shipping">
+                                <span class="material-icons" style="font-size: 14px;">local_shipping</span>
+                                {{ card.counts.shipping }}
+                            </span>
+                            <span class="px-1.5 py-0.5 bg-gray-900 text-white rounded flex items-center gap-0.5"
+                                title="Sold">
+                                <span class="material-icons" style="font-size: 14px;">check_circle</span>
+                                {{ card.counts.sold }}
+                            </span>
                         </div>
-                        <div class="p-3">
-                            <h3 class="font-medium text-gray-900 text-sm mb-1 truncate">
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- List View -->
+        <div id="listView" class="hidden space-y-2">
+            {% for card in cards %}
+            <a href="/card/{{ card._id }}" class="block">
+                <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all duration-200">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                            <img src="{{ card.imgbb_url }}" alt="{{ card.player_name or card.pokemon_name }}"
+                                class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-medium text-gray-900 mb-1">
                                 {{ card.player_name or card.pokemon_name }}
                             </h3>
-                            <p class="text-xs text-gray-500 mb-2 truncate">
+                            <p class="text-sm text-gray-600 mb-2">
                                 {% if card.card_type == 'sport' %}
-                                    {{ card.year }}{% if card.brand %} · {{ card.brand }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}
+                                {{ card.year }}{% if card.brand %} · {{ card.brand }}{% endif %}{% if card.series %} ·
+                                {{ card.series }}{% endif %}
                                 {% elif card.card_type == 'pokemon' %}
-                                    {{ card.year }}{% if card.language %} · {{ card.language }}{% endif %}{% if card.era %} · {{ card.era }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}
+                                {{ card.year }}{% if card.language %} · {{ card.language }}{% endif %}{% if card.era %}
+                                · {{ card.era }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}
                                 {% else %}
-                                    {{ card.year }} {{ card.brand }}
+                                {{ card.year }} {{ card.brand }}{% if card.series %} · {{ card.series }}{% endif %}
                                 {% endif %}
+                                {% if card.insert_parallel %} · {{ card.insert_parallel }}{% endif %}
                             </p>
-                            <div class="flex gap-1 text-xs">
-                                <span class="px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded flex items-center gap-0.5" title="In Stock">
-                                    <span class="material-icons" style="font-size: 14px;">inventory_2</span>
-                                    {{ card.counts.in_stock }}
-                                </span>
-                                <span class="px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded flex items-center gap-0.5" title="Grading">
-                                    <span class="material-icons" style="font-size: 14px;">grade</span>
-                                    {{ card.counts.grading }}
-                                </span>
-                                <span class="px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded flex items-center gap-0.5" title="Shipping">
-                                    <span class="material-icons" style="font-size: 14px;">local_shipping</span>
-                                    {{ card.counts.shipping }}
-                                </span>
-                                <span class="px-1.5 py-0.5 bg-gray-900 text-white rounded flex items-center gap-0.5" title="Sold">
-                                    <span class="material-icons" style="font-size: 14px;">check_circle</span>
-                                    {{ card.counts.sold }}
-                                </span>
+                            <div class="flex gap-4 text-xs text-gray-500">
+                                <span>In Stock: <strong class="text-gray-900">{{ card.counts.in_stock }}</strong></span>
+                                <span>Grading: <strong class="text-gray-900">{{ card.counts.grading }}</strong></span>
+                                <span>Shipping: <strong class="text-gray-900">{{ card.counts.shipping }}</strong></span>
+                                <span>Sold: <strong class="text-gray-900">{{ card.counts.sold }}</strong></span>
                             </div>
                         </div>
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-
-            <!-- List View -->
-            <div id="listView" class="hidden space-y-2">
-                {% for card in cards %}
-                <a href="/card/{{ card._id }}" class="block">
-                    <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all duration-200">
-                        <div class="flex items-center gap-4">
-                            <div class="w-16 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                                <img src="{{ card.imgbb_url }}" alt="{{ card.player_name or card.pokemon_name }}" class="w-full h-full object-cover">
+                        <div class="text-right text-sm text-gray-500">
+                            <div class="text-lg font-semibold text-gray-900">
+                                {{ card.counts.in_stock + card.counts.grading + card.counts.shipping }}
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-medium text-gray-900 mb-1">
-                                    {{ card.player_name or card.pokemon_name }}
-                                </h3>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    {% if card.card_type == 'sport' %}
-                                        {{ card.year }}{% if card.brand %} · {{ card.brand }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}
-                                    {% elif card.card_type == 'pokemon' %}
-                                        {{ card.year }}{% if card.language %} · {{ card.language }}{% endif %}{% if card.era %} · {{ card.era }}{% endif %}{% if card.series %} · {{ card.series }}{% endif %}
-                                    {% else %}
-                                        {{ card.year }} {{ card.brand }}{% if card.series %} · {{ card.series }}{% endif %}
-                                    {% endif %}
-                                    {% if card.insert_parallel %} · {{ card.insert_parallel }}{% endif %}
-                                </p>
-                                <div class="flex gap-4 text-xs text-gray-500">
-                                    <span>In Stock: <strong class="text-gray-900">{{ card.counts.in_stock }}</strong></span>
-                                    <span>Grading: <strong class="text-gray-900">{{ card.counts.grading }}</strong></span>
-                                    <span>Shipping: <strong class="text-gray-900">{{ card.counts.shipping }}</strong></span>
-                                    <span>Sold: <strong class="text-gray-900">{{ card.counts.sold }}</strong></span>
-                                </div>
-                            </div>
-                            <div class="text-right text-sm text-gray-500">
-                                <div class="text-lg font-semibold text-gray-900">
-                                    {{ card.counts.in_stock + card.counts.grading + card.counts.shipping }}
-                                </div>
-                                <div class="text-xs">Remaining</div>
-                            </div>
+                            <div class="text-xs">Remaining</div>
                         </div>
                     </div>
-                </a>
-                {% endfor %}
-            </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
         {% else %}
-            <div class="text-center py-16">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                </svg>
-                <p class="mt-4 text-gray-500">No cards found. Add your first card to get started!</p>
-            </div>
+        <div class="text-center py-16">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <p class="mt-4 text-gray-500">No cards found. Add your first card to get started!</p>
+        </div>
         {% endif %}
     </div>
 </div>
@@ -273,155 +272,155 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script>
-// View Toggle
-let currentView = localStorage.getItem('viewMode') || 'card';
+    // View Toggle
+    let currentView = localStorage.getItem('viewMode') || 'card';
 
-function switchView(view) {
-    currentView = view;
-    localStorage.setItem('viewMode', view);
+    function switchView(view) {
+        currentView = view;
+        localStorage.setItem('viewMode', view);
 
-    const cardView = document.getElementById('cardView');
-    const listView = document.getElementById('listView');
-    const cardBtn = document.getElementById('cardViewBtn');
-    const listBtn = document.getElementById('listViewBtn');
+        const cardView = document.getElementById('cardView');
+        const listView = document.getElementById('listView');
+        const cardBtn = document.getElementById('cardViewBtn');
+        const listBtn = document.getElementById('listViewBtn');
 
-    if (view === 'card') {
-        cardView.classList.remove('hidden');
-        listView.classList.add('hidden');
-        cardBtn.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
-        cardBtn.classList.add('bg-gray-900', 'text-white');
-        listBtn.classList.remove('bg-gray-900', 'text-white');
-        listBtn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
-    } else {
-        cardView.classList.add('hidden');
-        listView.classList.remove('hidden');
-        listBtn.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
-        listBtn.classList.add('bg-gray-900', 'text-white');
-        cardBtn.classList.remove('bg-gray-900', 'text-white');
-        cardBtn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
-    }
-}
-
-// Initialize view on load
-document.addEventListener('DOMContentLoaded', function() {
-    switchView(currentView);
-    handleTypeChange(); // Initialize type-specific filters
-    loadFilterOptions();
-});
-
-// Handle type change and show/hide relevant filters
-function handleTypeChange() {
-    const typeFilter = document.getElementById('typeFilter');
-    const sportFilters = document.getElementById('sportFilters');
-    const pokemonFilters = document.getElementById('pokemonFilters');
-
-    // Show/hide type-specific filters
-    if (typeFilter.value === 'sport') {
-        sportFilters.style.display = 'block';
-        pokemonFilters.style.display = 'none';
-    } else if (typeFilter.value === 'pokemon') {
-        sportFilters.style.display = 'none';
-        pokemonFilters.style.display = 'block';
-    } else {
-        sportFilters.style.display = 'none';
-        pokemonFilters.style.display = 'none';
+        if (view === 'card') {
+            cardView.classList.remove('hidden');
+            listView.classList.add('hidden');
+            cardBtn.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+            cardBtn.classList.add('bg-gray-900', 'text-white');
+            listBtn.classList.remove('bg-gray-900', 'text-white');
+            listBtn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+        } else {
+            cardView.classList.add('hidden');
+            listView.classList.remove('hidden');
+            listBtn.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+            listBtn.classList.add('bg-gray-900', 'text-white');
+            cardBtn.classList.remove('bg-gray-900', 'text-white');
+            cardBtn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+        }
     }
 
-    // Reload filter options
-    loadFilterOptions();
-}
+    // Initialize view on load
+    document.addEventListener('DOMContentLoaded', function () {
+        switchView(currentView);
+        handleTypeChange(); // Initialize type-specific filters
+        loadFilterOptions();
+    });
 
-// Load filter options from API
-async function loadFilterOptions() {
-    try {
+    // Handle type change and show/hide relevant filters
+    function handleTypeChange() {
         const typeFilter = document.getElementById('typeFilter');
-        const brandFilter = document.getElementById('brandFilter');
+        const sportFilters = document.getElementById('sportFilters');
+        const pokemonFilters = document.getElementById('pokemonFilters');
 
-        // Build query string from current filters
-        const params = new URLSearchParams();
-        if (typeFilter.value) params.append('type', typeFilter.value);
-        if (brandFilter.value) params.append('brand', brandFilter.value);
-
-        const response = await fetch(`/api/filter-options?${params.toString()}`);
-        const options = await response.json();
-
-        // Update brand filter (sport-specific)
-        const currentBrand = '{{ request.args.get("brand", "") }}';
-        brandFilter.innerHTML = '<option value="">All Brands</option>';
-        options.brands.forEach(brand => {
-            const selected = brand === currentBrand ? 'selected' : '';
-            brandFilter.innerHTML += `<option value="${brand}" ${selected}>${brand}</option>`;
-        });
-
-        // Update language filter (pokemon-specific)
-        const languageFilter = document.getElementById('languageFilter');
-        const currentLanguage = '{{ request.args.get("language", "") }}';
-        languageFilter.innerHTML = '<option value="">All Languages</option>';
-        if (options.languages) {
-            options.languages.forEach(language => {
-                const selected = language === currentLanguage ? 'selected' : '';
-                languageFilter.innerHTML += `<option value="${language}" ${selected}>${language}</option>`;
-            });
+        // Show/hide type-specific filters
+        if (typeFilter.value === 'sport') {
+            sportFilters.style.display = 'block';
+            pokemonFilters.style.display = 'none';
+        } else if (typeFilter.value === 'pokemon') {
+            sportFilters.style.display = 'none';
+            pokemonFilters.style.display = 'block';
+        } else {
+            sportFilters.style.display = 'none';
+            pokemonFilters.style.display = 'none';
         }
 
-        // Update era filter (pokemon-specific)
-        const eraFilter = document.getElementById('eraFilter');
-        const currentEra = '{{ request.args.get("era", "") }}';
-        eraFilter.innerHTML = '<option value="">All Eras</option>';
-        if (options.eras) {
-            options.eras.forEach(era => {
-                const selected = era === currentEra ? 'selected' : '';
-                eraFilter.innerHTML += `<option value="${era}" ${selected}>${era}</option>`;
-            });
-        }
-
-        // Update series filter
-        const seriesFilter = document.getElementById('seriesFilter');
-        const currentSeries = '{{ request.args.get("series", "") }}';
-        seriesFilter.innerHTML = '<option value="">All Series</option>';
-        options.series.forEach(series => {
-            const selected = series === currentSeries ? 'selected' : '';
-            seriesFilter.innerHTML += `<option value="${series}" ${selected}>${series}</option>`;
-        });
-
-        // Update year filter
-        const yearFilter = document.querySelector('select[name="year"]');
-        const currentYear = '{{ request.args.get("year", "") }}';
-        yearFilter.innerHTML = '<option value="">All Years</option>';
-        options.years.forEach(year => {
-            const selected = year === currentYear ? 'selected' : '';
-            yearFilter.innerHTML += `<option value="${year}" ${selected}>${year}</option>`;
-        });
-
-        // Update name filter (player or pokemon based on type)
-        const nameFilter = document.getElementById('nameFilter');
-        const currentName = '{{ request.args.get("name", "") }}';
-        const cardType = typeFilter.value;
-
-        nameFilter.innerHTML = '<option value="">All Names</option>';
-
-        if (!cardType || cardType === 'sport') {
-            options.players.forEach(name => {
-                const selected = name === currentName ? 'selected' : '';
-                nameFilter.innerHTML += `<option value="${name}" ${selected}>${name}</option>`;
-            });
-        }
-
-        if (!cardType || cardType === 'pokemon') {
-            options.pokemon.forEach(name => {
-                const selected = name === currentName ? 'selected' : '';
-                nameFilter.innerHTML += `<option value="${name}" ${selected}>${name}</option>`;
-            });
-        }
-
-    } catch (error) {
-        console.error('Failed to load filter options:', error);
+        // Reload filter options
+        loadFilterOptions();
     }
-}
 
-// Update filters when type or brand changes
-function updateFilters() {
-    document.getElementById('filterForm').submit();
-}
+    // Load filter options from API
+    async function loadFilterOptions() {
+        try {
+            const typeFilter = document.getElementById('typeFilter');
+            const brandFilter = document.getElementById('brandFilter');
+
+            // Build query string from current filters
+            const params = new URLSearchParams();
+            if (typeFilter.value) params.append('type', typeFilter.value);
+            if (brandFilter.value) params.append('brand', brandFilter.value);
+
+            const response = await fetch(`/api/filter-options?${params.toString()}`);
+            const options = await response.json();
+
+            // Update brand filter (sport-specific)
+            const currentBrand = '{{ request.args.get("brand", "") }}';
+            brandFilter.innerHTML = '<option value="">All Brands</option>';
+            options.brands.forEach(brand => {
+                const selected = brand === currentBrand ? 'selected' : '';
+                brandFilter.innerHTML += `<option value="${brand}" ${selected}>${brand}</option>`;
+            });
+
+            // Update language filter (pokemon-specific)
+            const languageFilter = document.getElementById('languageFilter');
+            const currentLanguage = '{{ request.args.get("language", "") }}';
+            languageFilter.innerHTML = '<option value="">All Languages</option>';
+            if (options.languages) {
+                options.languages.forEach(language => {
+                    const selected = language === currentLanguage ? 'selected' : '';
+                    languageFilter.innerHTML += `<option value="${language}" ${selected}>${language}</option>`;
+                });
+            }
+
+            // Update era filter (pokemon-specific)
+            const eraFilter = document.getElementById('eraFilter');
+            const currentEra = '{{ request.args.get("era", "") }}';
+            eraFilter.innerHTML = '<option value="">All Eras</option>';
+            if (options.eras) {
+                options.eras.forEach(era => {
+                    const selected = era === currentEra ? 'selected' : '';
+                    eraFilter.innerHTML += `<option value="${era}" ${selected}>${era}</option>`;
+                });
+            }
+
+            // Update series filter
+            const seriesFilter = document.getElementById('seriesFilter');
+            const currentSeries = '{{ request.args.get("series", "") }}';
+            seriesFilter.innerHTML = '<option value="">All Series</option>';
+            options.series.forEach(series => {
+                const selected = series === currentSeries ? 'selected' : '';
+                seriesFilter.innerHTML += `<option value="${series}" ${selected}>${series}</option>`;
+            });
+
+            // Update year filter
+            const yearFilter = document.querySelector('select[name="year"]');
+            const currentYear = '{{ request.args.get("year", "") }}';
+            yearFilter.innerHTML = '<option value="">All Years</option>';
+            options.years.forEach(year => {
+                const selected = year === currentYear ? 'selected' : '';
+                yearFilter.innerHTML += `<option value="${year}" ${selected}>${year}</option>`;
+            });
+
+            // Update name filter (player or pokemon based on type)
+            const nameFilter = document.getElementById('nameFilter');
+            const currentName = '{{ request.args.get("name", "") }}';
+            const cardType = typeFilter.value;
+
+            nameFilter.innerHTML = '<option value="">All Names</option>';
+
+            if (!cardType || cardType === 'sport') {
+                options.players.forEach(name => {
+                    const selected = name === currentName ? 'selected' : '';
+                    nameFilter.innerHTML += `<option value="${name}" ${selected}>${name}</option>`;
+                });
+            }
+
+            if (!cardType || cardType === 'pokemon') {
+                options.pokemon.forEach(name => {
+                    const selected = name === currentName ? 'selected' : '';
+                    nameFilter.innerHTML += `<option value="${name}" ${selected}>${name}</option>`;
+                });
+            }
+
+        } catch (error) {
+            console.error('Failed to load filter options:', error);
+        }
+    }
+
+    // Update filters when type or brand changes
+    function updateFilters() {
+        document.getElementById('filterForm').submit();
+    }
 </script>
 {% endblock %}
