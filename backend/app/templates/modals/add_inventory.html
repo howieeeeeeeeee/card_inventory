@@ -173,65 +173,118 @@
                     </svg>
                 </button>
             </div>
-            <!-- Advanced Filters -->
+            <!-- Search and Filters -->
             <div class="mt-4 space-y-3">
                 <!-- Search Bar -->
                 <input
                     type="text"
                     id="cardSelectorSearch"
-                    placeholder="Search by name, brand, year, series..."
+                    placeholder="Search cards..."
                     onkeyup="filterCards()"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 >
 
-                <!-- Filter Selects -->
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
-                    <!-- Type Filter -->
-                    <select
-                        id="cardSelectorType"
-                        onchange="filterCards()"
-                        class="px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                    >
-                        <option value="">All Types</option>
-                        <option value="sport">Sport</option>
-                        <option value="pokemon">Pokemon</option>
-                    </select>
+                <!-- Advanced Filters (Expandable) -->
+                <details class="bg-gray-50 rounded-lg border border-gray-200">
+                    <summary class="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center justify-between">
+                        <span>Advanced Filters</span>
+                        <svg class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </summary>
 
-                    <!-- Brand Filter -->
-                    <select
-                        id="cardSelectorBrand"
-                        onchange="filterCards()"
-                        class="px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                    >
-                        <option value="">All Brands</option>
-                    </select>
+                    <div class="px-4 pb-4 pt-2 space-y-4">
+                        <!-- Card Type Selection -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Card Type</label>
+                            <select
+                                id="cardSelectorType"
+                                onchange="handleCardSelectorTypeChange()"
+                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                            >
+                                <option value="">All Types</option>
+                                <option value="sport">Sport</option>
+                                <option value="pokemon">Pokemon</option>
+                            </select>
+                        </div>
 
-                    <!-- Series Filter -->
-                    <select
-                        id="cardSelectorSeries"
-                        onchange="filterCards()"
-                        class="px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                    >
-                        <option value="">All Series</option>
-                    </select>
+                        <!-- Common Filters -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">Common</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <select
+                                        id="cardSelectorYear"
+                                        onchange="filterCards()"
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                                    >
+                                        <option value="">All Years</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <select
+                                        id="cardSelectorSeries"
+                                        onchange="filterCards()"
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                                    >
+                                        <option value="">All Series</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
-                    <!-- Year Filter -->
-                    <select
-                        id="cardSelectorYear"
-                        onchange="filterCards()"
-                        class="px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
-                    >
-                        <option value="">All Years</option>
-                    </select>
+                        <!-- Sport-Specific Filters -->
+                        <div id="cardSelectorSportFilters" style="display: none;">
+                            <label class="block text-xs font-medium text-gray-700 mb-2">Sport Cards</label>
+                            <div class="grid grid-cols-1 gap-3">
+                                <div>
+                                    <select
+                                        id="cardSelectorBrand"
+                                        onchange="filterCards()"
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                                    >
+                                        <option value="">All Brands</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
-                    <!-- Clear Filters -->
-                    <button
-                        onclick="clearCardFilters()"
-                        class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                    >
-                        Clear Filters
-                    </button>
-                </div>
+                        <!-- Pokemon-Specific Filters -->
+                        <div id="cardSelectorPokemonFilters" style="display: none;">
+                            <label class="block text-xs font-medium text-gray-700 mb-2">Pokemon Cards</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <select
+                                        id="cardSelectorLanguage"
+                                        onchange="filterCards()"
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                                    >
+                                        <option value="">All Languages</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <select
+                                        id="cardSelectorEra"
+                                        onchange="filterCards()"
+                                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                                    >
+                                        <option value="">All Eras</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Clear Filters -->
+                        <div class="flex items-center justify-end pt-2">
+                            <button
+                                onclick="clearCardFilters()"
+                                class="text-sm text-gray-600 hover:text-gray-900 underline"
+                            >
+                                Clear all filters
+                            </button>
+                        </div>
+                    </div>
+                </details>
             </div>
         </div>
 
@@ -301,20 +354,46 @@ function clearSelectedCard() {
     document.getElementById('selected_card_preview').classList.add('hidden');
 }
 
+function handleCardSelectorTypeChange() {
+    const typeFilter = document.getElementById('cardSelectorType');
+    const sportFilters = document.getElementById('cardSelectorSportFilters');
+    const pokemonFilters = document.getElementById('cardSelectorPokemonFilters');
+
+    // Show/hide type-specific filters
+    if (typeFilter.value === 'sport') {
+        sportFilters.style.display = 'block';
+        pokemonFilters.style.display = 'none';
+    } else if (typeFilter.value === 'pokemon') {
+        sportFilters.style.display = 'none';
+        pokemonFilters.style.display = 'block';
+    } else {
+        sportFilters.style.display = 'none';
+        pokemonFilters.style.display = 'none';
+    }
+
+    filterCards();
+}
+
 function populateCardFilters() {
     const cards = document.querySelectorAll('.card-selector-item');
     const brands = new Set();
     const series = new Set();
     const years = new Set();
+    const languages = new Set();
+    const eras = new Set();
 
     cards.forEach(card => {
         const brand = card.getAttribute('data-brand');
         const ser = card.getAttribute('data-series');
         const year = card.getAttribute('data-year');
+        const language = card.getAttribute('data-language');
+        const era = card.getAttribute('data-era');
 
         if (brand) brands.add(brand);
         if (ser) series.add(ser);
         if (year) years.add(year);
+        if (language) languages.add(language);
+        if (era) eras.add(era);
     });
 
     // Populate brand dropdown
@@ -326,6 +405,28 @@ function populateCardFilters() {
         brandSelect.appendChild(option);
     });
     brandSelect.setAttribute('data-populated', 'true');
+
+    // Populate language dropdown
+    const languageSelect = document.getElementById('cardSelectorLanguage');
+    Array.from(languages).sort().forEach(language => {
+        if (language) {
+            const option = document.createElement('option');
+            option.value = language;
+            option.textContent = language.charAt(0).toUpperCase() + language.slice(1);
+            languageSelect.appendChild(option);
+        }
+    });
+
+    // Populate era dropdown
+    const eraSelect = document.getElementById('cardSelectorEra');
+    Array.from(eras).sort().forEach(era => {
+        if (era) {
+            const option = document.createElement('option');
+            option.value = era;
+            option.textContent = era.charAt(0).toUpperCase() + era.slice(1);
+            eraSelect.appendChild(option);
+        }
+    });
 
     // Populate series dropdown
     const seriesSelect = document.getElementById('cardSelectorSeries');
@@ -346,6 +447,9 @@ function populateCardFilters() {
         option.textContent = year;
         yearSelect.appendChild(option);
     });
+
+    // Initialize type-specific filter visibility
+    handleCardSelectorTypeChange();
 }
 
 function filterCards() {
@@ -354,6 +458,8 @@ function filterCards() {
     const brandFilter = document.getElementById('cardSelectorBrand').value.toLowerCase();
     const seriesFilter = document.getElementById('cardSelectorSeries').value.toLowerCase();
     const yearFilter = document.getElementById('cardSelectorYear').value;
+    const languageFilter = document.getElementById('cardSelectorLanguage')?.value.toLowerCase() || '';
+    const eraFilter = document.getElementById('cardSelectorEra')?.value.toLowerCase() || '';
     const cards = document.querySelectorAll('.card-selector-item');
 
     let visibleCount = 0;
@@ -364,6 +470,8 @@ function filterCards() {
         const cardBrand = card.getAttribute('data-brand');
         const cardSeries = card.getAttribute('data-series');
         const cardYear = card.getAttribute('data-year');
+        const cardLanguage = card.getAttribute('data-language');
+        const cardEra = card.getAttribute('data-era');
 
         // Check all filters
         const matchesSearch = !searchTerm || searchData.includes(searchTerm);
@@ -371,8 +479,10 @@ function filterCards() {
         const matchesBrand = !brandFilter || cardBrand === brandFilter;
         const matchesSeries = !seriesFilter || cardSeries === seriesFilter;
         const matchesYear = !yearFilter || cardYear === yearFilter;
+        const matchesLanguage = !languageFilter || cardLanguage === languageFilter;
+        const matchesEra = !eraFilter || cardEra === eraFilter;
 
-        if (matchesSearch && matchesType && matchesBrand && matchesSeries && matchesYear) {
+        if (matchesSearch && matchesType && matchesBrand && matchesSeries && matchesYear && matchesLanguage && matchesEra) {
             card.style.display = '';
             visibleCount++;
         } else {
@@ -390,7 +500,13 @@ function clearCardFilters() {
     document.getElementById('cardSelectorBrand').value = '';
     document.getElementById('cardSelectorSeries').value = '';
     document.getElementById('cardSelectorYear').value = '';
-    filterCards();
+    if (document.getElementById('cardSelectorLanguage')) {
+        document.getElementById('cardSelectorLanguage').value = '';
+    }
+    if (document.getElementById('cardSelectorEra')) {
+        document.getElementById('cardSelectorEra').value = '';
+    }
+    handleCardSelectorTypeChange();
 }
 
 // Item image upload file name display

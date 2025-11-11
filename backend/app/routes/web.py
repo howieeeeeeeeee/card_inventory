@@ -120,7 +120,6 @@ def create_definition():
             'year': request.form.get('year'),
             'brand': request.form.get('brand'),
             'series': request.form.get('series', ''),
-            'card_number': request.form.get('card_number', ''),
             'insert_parallel': request.form.get('insert_parallel', ''),
             'note': request.form.get('note', ''),
         }
@@ -464,7 +463,6 @@ def update_definition(definition_id):
 
         # Optional fields - update even if empty
         data['series'] = request.form.get('series', '')
-        data['card_number'] = request.form.get('card_number', '')
         data['insert_parallel'] = request.form.get('insert_parallel', '')
         data['note'] = request.form.get('note', '')
 

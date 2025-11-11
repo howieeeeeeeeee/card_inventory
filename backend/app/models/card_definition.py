@@ -46,7 +46,7 @@ class CardDefinitionModel:
         }
 
         # Optional common fields
-        optional_fields = ['series', 'card_number', 'insert_parallel', 'note']
+        optional_fields = ['series', 'insert_parallel', 'note']
         for field in optional_fields:
             if field in data:
                 doc[field] = data[field]
