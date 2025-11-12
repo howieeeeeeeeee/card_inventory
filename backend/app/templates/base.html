@@ -7,9 +7,138 @@
     <title>{% block title %}A2Z Cards Inventory System{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Tom Select for searchable dropdowns -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <style>
         [x-cloak] {
             display: none !important;
+        }
+
+        /* Tom Select Styling - Clean single box design */
+        .ts-wrapper.single .ts-control {
+            padding: 0.5rem 0.75rem !important;
+            border: 1px solid rgb(209, 213, 219) !important;
+            border-radius: 0.5rem !important;
+            background-color: white !important;
+            min-height: 42px !important;
+            height: 42px !important;
+            display: flex !important;
+            align-items: center !important;
+            box-shadow: none !important;
+        }
+
+        .ts-wrapper.single .ts-control input {
+            height: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        .ts-wrapper.single .ts-control,
+        .ts-wrapper.single .ts-control input {
+            font-size: 0.875rem !important;
+            line-height: 1.25rem !important;
+        }
+
+        .ts-wrapper.single.focus .ts-control,
+        .ts-wrapper.focus .ts-control {
+            border-color: rgb(17, 24, 39) !important;
+            outline: none !important;
+            box-shadow: 0 0 0 2px rgb(17 24 39 / 0.1) !important;
+        }
+
+        /* Remove any wrapper styling to prevent double borders */
+        .ts-wrapper {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .ts-wrapper.single .ts-control::before,
+        .ts-wrapper.single .ts-control::after {
+            display: none !important;
+        }
+
+        .ts-dropdown {
+            border: 1px solid rgb(209, 213, 219) !important;
+            border-radius: 0.5rem !important;
+            margin-top: 0.25rem !important;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
+        }
+
+        .ts-dropdown .option {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.875rem !important;
+        }
+
+        .ts-dropdown .option.active {
+            background-color: rgb(17, 24, 39) !important;
+            color: white !important;
+        }
+
+        .ts-dropdown .create {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.875rem !important;
+            background-color: rgb(249, 250, 251) !important;
+            border-top: 1px solid rgb(229, 231, 235) !important;
+        }
+
+        .ts-dropdown .no-results {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.875rem !important;
+            color: rgb(107, 114, 128) !important;
+        }
+
+
+        /* Image Loading Spinner */
+        .image-loading-container {
+            position: relative;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .image-loading-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .image-loading-container img {
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+
+        .image-loading-container img.loaded {
+            opacity: 1;
+        }
+
+        .image-loading-container.loaded::before {
+            display: none;
+        }
+
+        .image-loading-container.loaded {
+            background: none;
+            animation: none;
         }
     </style>
 </head>
@@ -37,6 +166,51 @@
     </main>
 
     {% block scripts %}{% endblock %}
+
+    <script>
+        // Handle images that are already cached and loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.image-loading-container img').forEach(function(img) {
+                if (img.complete && img.naturalHeight !== 0) {
+                    img.classList.add('loaded');
+                    img.parentElement.classList.add('loaded');
+                }
+            });
+        });
+
+        // Initialize searchable dropdown for a field
+        function initSearchableDropdown(selector, fieldName) {
+            const element = document.querySelector(selector);
+            if (!element) return;
+
+            // Fetch existing values from API
+            fetch(`/api/field-values/${fieldName}`)
+                .then(response => response.json())
+                .then(data => {
+                    const values = data.values || [];
+
+                    // Initialize Tom Select (single-select only)
+                    new TomSelect(element, {
+                        create: true,
+                        createOnBlur: true,
+                        maxItems: 1, // ENFORCE single-select
+                        options: values.map(value => ({value: value, text: value})),
+                        maxOptions: 100,
+                        render: {
+                            option_create: function(data, escape) {
+                                return '<div class="create">Add <strong>' + escape(data.input) + '</strong>&hellip;</div>';
+                            },
+                            no_results: function(data, escape) {
+                                return '<div class="no-results">Type to add new value</div>';
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error(`Error loading values for ${fieldName}:`, error);
+                });
+        }
+    </script>
 </body>
 
 </html>

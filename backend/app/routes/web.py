@@ -119,6 +119,8 @@ def create_definition():
             'card_type': request.form.get('card_type'),
             'year': request.form.get('year'),
             'brand': request.form.get('brand'),
+            'card_number': request.form.get('card_number', ''),
+            'rarity': request.form.get('rarity', ''),
             'series': request.form.get('series', ''),
             'insert_parallel': request.form.get('insert_parallel', ''),
             'note': request.form.get('note', ''),
@@ -472,6 +474,8 @@ def update_definition(definition_id):
             data['brand'] = request.form.get('brand')
 
         # Optional fields - update even if empty
+        data['card_number'] = request.form.get('card_number', '')
+        data['rarity'] = request.form.get('rarity', '')
         data['series'] = request.form.get('series', '')
         data['insert_parallel'] = request.form.get('insert_parallel', '')
         data['note'] = request.form.get('note', '')
@@ -587,3 +591,51 @@ def archive_inventory(item_id):
 
     except Exception as e:
         return {'success': False, 'error': str(e)}, 500
+
+
+@web_bp.route('/api/field-values/<field_name>')
+def get_field_values(field_name):
+    """
+    Returns unique values for a given field for autocomplete/dropdown
+    Supports fields from both CardDefinition and InventoryItem
+    """
+    try:
+        allowed_fields = {
+            # CardDefinition fields
+            'rarity': ('card_definitions', 'rarity'),
+            'brand': ('card_definitions', 'brand'),
+            'era': ('card_definitions', 'era'),
+            'insert_parallel': ('card_definitions', 'insert_parallel'),
+            'series': ('card_definitions', 'series'),
+            'language': ('card_definitions', 'language'),
+            'pokemon_name': ('card_definitions', 'pokemon_name'),
+            'player_name': ('card_definitions', 'player_name'),
+            # InventoryItem fields
+            'condition': ('inventory_items', 'condition'),
+            'personal_grade': ('inventory_items', 'personal_grade'),
+            # Nested fields in acquisition
+            'acquired_from': ('inventory_items', 'acquisition.acquiredFrom'),
+            'paid_by': ('inventory_items', 'acquisition.paid_by'),
+        }
+
+        if field_name not in allowed_fields:
+            return {'error': 'Invalid field name'}, 400
+
+        collection_name, db_field = allowed_fields[field_name]
+
+        if collection_name == 'card_definitions':
+            collection = get_card_definitions_collection()
+        else:
+            collection = get_inventory_items_collection()
+
+        # Get distinct values, excluding archived items
+        values = collection.distinct(db_field, {'archived': {'$ne': True}})
+
+        # Filter out empty/null values and sort
+        values = [v for v in values if v and str(v).strip()]
+        values = sorted(set(values))
+
+        return {'values': values}, 200
+
+    except Exception as e:
+        return {'error': str(e)}, 500

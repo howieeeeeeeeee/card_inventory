@@ -47,9 +47,14 @@
             <!-- Search and Filters -->
             <form id="filterForm" method="GET" action="/">
                 <!-- Search Bar -->
-                <div class="mb-3">
+                <div class="mb-3 relative">
                     <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Search cards..."
-                        class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm" />
+                        class="w-full px-4 py-2.5 pr-12 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm" />
+                    <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-gray-600 hover:text-gray-900">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <!-- Advanced Filters (Expandable) -->
@@ -69,7 +74,7 @@
                         <!-- Card Type Selection -->
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Card Type</label>
-                            <select name="type" id="typeFilter" onchange="handleTypeChange()"
+                            <select name="type" id="typeFilter" onchange="handleTypeChange(); document.getElementById('filterForm').submit();"
                                 class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm">
                                 <option value="">All Types</option>
                                 <option value="sport" {% if request.args.get('type')=='sport' %}selected{% endif %}>
@@ -160,9 +165,10 @@
             <a href="/card/{{ card._id }}" class="group">
                 <div
                     class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200">
-                    <div class="aspect-[3/4] bg-gray-100 overflow-hidden">
+                    <div class="aspect-[3/4] overflow-hidden image-loading-container" id="img-container-{{ card._id }}">
                         <img src="{{ card.imgbb_url }}" alt="{{ card.player_name or card.pokemon_name }}"
-                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            onload="this.classList.add('loaded'); this.parentElement.classList.add('loaded');">
                     </div>
                     <div class="p-3">
                         <h3 class="font-medium text-gray-900 text-sm mb-1 truncate">
@@ -213,9 +219,10 @@
             <a href="/card/{{ card._id }}" class="block">
                 <div class="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all duration-200">
                     <div class="flex items-center gap-4">
-                        <div class="w-16 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                        <div class="w-16 h-20 rounded overflow-hidden flex-shrink-0 image-loading-container">
                             <img src="{{ card.imgbb_url }}" alt="{{ card.player_name or card.pokemon_name }}"
-                                class="w-full h-full object-cover">
+                                class="w-full h-full object-cover"
+                                onload="this.classList.add('loaded'); this.parentElement.classList.add('loaded');">
                         </div>
                         <div class="flex-1 min-w-0">
                             <h3 class="font-medium text-gray-900 mb-1">

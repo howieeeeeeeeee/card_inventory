@@ -46,7 +46,7 @@ class CardDefinitionModel:
         }
 
         # Optional common fields
-        optional_fields = ['series', 'insert_parallel', 'note']
+        optional_fields = ['series', 'insert_parallel', 'note', 'card_number', 'rarity']
         for field in optional_fields:
             if field in data:
                 doc[field] = data[field]
@@ -77,7 +77,7 @@ class CardDefinitionModel:
             return {}
 
         # Search across multiple text fields
-        search_fields = ['player_name', 'pokemon_name', 'brand', 'series', 'insert_parallel']
+        search_fields = ['player_name', 'pokemon_name', 'brand', 'series', 'insert_parallel', 'card_number', 'rarity']
         or_conditions = [
             {field: {'$regex': query, '$options': 'i'}}
             for field in search_fields

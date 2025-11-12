@@ -224,7 +224,7 @@ function addGradingEntry(gradingData = null) {
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Fee ($)</label>
-                <input type="number" step="0.01" name="grading[${entryId}][fee]" value="${gradingData?.fee || ''}" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+                <input type="number" step="0.01" name="grading[${entryId}][fee]" value="${gradingData?.fee || ''}" oninput="calculateEditTotalCost()" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-transparent">
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Date Submitted</label>
@@ -248,6 +248,8 @@ function removeGradingEntry(entryId) {
     const entry = document.getElementById(`grading_entry_${entryId}`);
     if (entry) {
         entry.remove();
+        // Recalculate total cost after removing grading entry
+        calculateEditTotalCost();
     }
 }
 
@@ -263,10 +265,38 @@ function loadGradingHistory(gradingArray) {
     }
 }
 
+// Auto-calculate total cost in edit inventory modal
+function calculateEditTotalCost() {
+    const price = parseFloat(document.getElementById('edit_acquisition_price')?.value || 0);
+    const shipping = parseFloat(document.getElementById('edit_acquisition_shipping')?.value || 0);
+    const tax = parseFloat(document.getElementById('edit_acquisition_tax')?.value || 0);
+
+    // Sum all grading fees
+    let gradingFeesTotal = 0;
+    const gradingFeeInputs = document.querySelectorAll('input[name^="grading"][name$="[fee]"]');
+    gradingFeeInputs.forEach(input => {
+        gradingFeesTotal += parseFloat(input.value || 0);
+    });
+
+    const total = price + shipping + tax + gradingFeesTotal;
+    const totalField = document.getElementById('edit_acquisition_total_cost');
+    if (totalField) {
+        totalField.value = total.toFixed(2);
+    }
+}
+
 // Listen for status changes
 document.addEventListener('DOMContentLoaded', function() {
     const editStatus = document.getElementById('edit_status');
     if (editStatus) {
         editStatus.addEventListener('change', toggleEditDispositionSection);
     }
+
+    // Initialize searchable dropdowns for Edit Inventory modal
+    setTimeout(function() {
+        initSearchableDropdown('#editInventoryModal input[name="condition"]', 'condition');
+        initSearchableDropdown('#editInventoryModal input[name="personal_grade"]', 'personal_grade');
+        initSearchableDropdown('#editInventoryModal input[name="acquisition_acquiredFrom"]', 'acquired_from');
+        initSearchableDropdown('#editInventoryModal input[name="acquisition_paid_by"]', 'paid_by');
+    }, 500);
 });

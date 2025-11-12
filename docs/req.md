@@ -1,146 +1,441 @@
-Here is a Product Requirements Document (PRD) for the Card Inventory System, detailing the features, frontend interactions, and supporting API endpoints.
+# Card Inventory System - Requirements & Feature Documentation
+
+## Product Overview
+
+A web-based application for tracking a personal trading card inventory with full lifecycle management from acquisition through grading to sale.
+
+**Core Technology Stack:**
+- **Backend:** Flask (Python 3.11+)
+- **Database:** MongoDB Atlas
+- **Image Hosting:** ImgBB API
+- **Frontend:** Server-rendered HTML with Tailwind CSS
+- **Package Management:** uv
 
 ---
 
-## 1. Product Requirements Document: Card Inventory System
+## 1. Data Models
 
-* **Product:** A web-based application for tracking a personal trading card inventory.
-* **Goal:** To create a centralized system to manage the full lifecycle of trading cards, from acquisition through grading and eventual sale, while tracking profitability.
-* **Core Technology:**
-  * **Backend:** Flask (Python)
-  * **Database:** MongoDB
-  * **Image Hosting:** ImgBB API
-  * **Package Management:** `uv`
+### CardDefinition (Master Card Template)
+Represents the master template for a specific trading card.
 
-## 2. Key Features & Frontend Interactions
+**Required Fields:**
+- `card_type` (enum: "sport" | "pokemon")
+- `year` (string)
+- `brand` (string)
+- `imgbb_url` (string) - hosted image URL
 
-### Feature 1: Inventory Dashboard (Overview Page)
+**Optional Fields:**
+- `series` (string)
+- `insert_parallel` (string)
+- `note` (string)
+- `archived` (boolean) - soft delete flag
 
-This is the main landing page, providing a high-level view of all `CardDefinitions` in the inventory.
+**Type-Specific Fields:**
+- **Sport Cards:**
+  - `player_name` (string, required)
+- **Pokemon Cards:**
+  - `pokemon_name` (string, required)
+  - `language` (string, optional)
+  - `era` (string, optional)
 
-* **Frontend Interaction:**
-  * The page displays a grid or list of `CardDefinition` items.
-  * **Each item shows:** `imgbb_url` (image), `player_name` or `pokemon_name`, `year`, `brand`, and `insert_parallel`.
-  * **Aggregated Counts:** Each item also displays inventory counts:
-    * **In Stock:** [X]
-    * **Grading:** [Y]
-    * **Shipping:** [Z]
-    * **Sold:** [S]
-  * **Header Bar:**
-    * **Search Bar:** Allows full-text search by fields like `player_name`, `pokemon_name`, `brand`, etc. The grid updates dynamically.
-    * **Filter Button:** (Optional) A dropdown to filter by `card_type`, `year`, or other fields.
-    * **"Add New Card Definition" Button:** Navigates to the "Create Card Definition" page (Feature 2).
-    * **"Add Inventory Item" Button:** Opens a modal (Feature 3).
-  * **On-Click (Card Definition):** Clicking a card definition expands an in-line view or navigates to a detail page. This view shows:
-    * **Inventory Breakdown:** A list of all individual `InventoryItems` for this definition, showing their `status`, `condition`, and `serial_number`.
-    * **Past Sales:** A list of all items with `status: "sold"`, showing `acquisition.total_cost` and `disposition.revenue`.
-    * **Edit Item:** Each individual item in the breakdown has an "Edit" button that opens a modal to update it (Feature 4).
+### InventoryItem (Individual Card Instance)
+Represents a single physical card in the inventory.
 
-### Feature 2: Create / Edit `CardDefinition`
+**Required Fields:**
+- `card_definition_id` (ObjectId) - reference to CardDefinition
+- `status` (enum: "in_stock" | "shipping" | "grading" | "sold")
 
-This page allows for the creation or updating of the "master" card templates.
+**Identification Fields:**
+- `custom_id` (string) - user-defined identifier
+- `serial_number` (string) - card serial/parallel number
+- `item_image_url` (string) - specific item photo (for serial variants)
 
-* **Frontend Interaction:**
-  * A form is presented.
-  * **Card Type Toggle:** A dropdown or radio button to select **"Sport"** or **"Pokemon"**. This *must* dynamically show/hide the relevant fields (`player_name` vs. `pokemon_name`, `language`, `era`).
-  * **Core Fields:** `year`, `brand`, `series`, `card_number`, `insert_parallel`, `note`.
-  * **Image Upload:** An `<input type="file">` button.
-    * When a user selects a file, the frontend *immediately* POSTs the file to the backend's `/api/upload-image` endpoint.
-    * The backend handles the ImgBB API call.
-    * On success, the backend returns the `imgbb_url`, which the frontend then stores in a hidden form field to be saved with the `CardDefinition`.
-  * A "Save" button submits the entire form.
+**Condition Fields:**
+- `condition` (string) - graded condition (e.g., "PSA 10", "BGS 9.5")
+- `personal_grade` (string) - personal assessment (e.g., "Near Mint", "Mint")
+- `defects` (string) - description of any defects
+- `is_graded` (boolean)
 
-### Feature 3: Add New `InventoryItem` (Acquisition)
+**Location & Notes:**
+- `is_in_taiwan` (boolean)
+- `notes` (string)
 
-This feature is for adding a new card you have just acquired. It's often launched from the Dashboard's "Add Inventory Item" button.
+**Nested Objects:**
 
-* **Frontend Interaction:**
-  * A modal or page opens.
-  * **Step 1: Select Definition:**
-    * A search-as-you-type dropdown/select box. The user types "LeBron Prizm" and a list of matching `CardDefinitions` appears.
-    * If the card definition doesn't exist, a button "Create New Definition" links to Feature 2.
-  * **Step 2: Input Acquisition Data:**
-    * Once a definition is selected, a form appears for the `InventoryItem` data.
-    * **Core Info:** `status` (dropdown: "in stock", "shipping"), `serial_number`, `condition`, `defects`, `personal_grade`, `is_graded` (checkbox), `is_in_taiwan` (checkbox), `notes`.
-    * **Acquisition Info:** `date`, `price`, `shipping`, `tax`, `total_cost`, `acquiredFrom`, `paid_by`.
-  * A "Save" button creates the new `InventoryItem` document.
+#### Acquisition
+- `date` (date)
+- `price` (decimal)
+- `shipping` (decimal)
+- `tax` (decimal)
+- `total_cost` (decimal) - **AUTO-CALCULATED** from price + shipping + tax
+- `acquiredFrom` (string) - seller/source
+- `paid_by` (string) - payment method/account
 
-### Feature 4: Update `InventoryItem` (Grading & Sale)
+#### Grading (Array)
+- `type` (string) - grading company (PSA, BGS, SGC, CGC)
+- `fee` (decimal)
+- `date_submitted` (date)
+- `date_returned` (date)
+- `result` (string) - final grade
 
-This feature is for managing the lifecycle of a *single* card you own (e.g., sending to PSA, selling on eBay).
+#### Disposition (Sale Info)
+- `date` (date)
+- `revenue` (decimal)
+- `processing_fee` (decimal)
+- `shipping_fee` (decimal)
+- `sales_tax_collected` (decimal)
+- `income_receiver` (string)
 
-* **Frontend Interaction:**
-  * Launched by clicking "Edit" on an individual item from the Dashboard (Feature 1).
-  * A modal or page opens, pre-filled with the item's current data.
-  * **General Info:** User can update `status` (dropdown), `condition`, `notes`, `is_in_taiwan`, etc.
-  * **Grading Section:**
-    * Displays a list of any existing `grading` array entries.
-    * "Add Grading Submission" button: Opens a small sub-form to add a new object to the `grading` array (`type`, `fee`, `date_submitted`).
-    * Existing entries can be edited to add `date_returned` and `result`.
-  * **Sale (Disposition) Section:**
-    * This form is ideally enabled *only if* the `status` is set to "Sold".
-    * Fields: `date`, `revenue`, `processing_fee`, `shipping_fee`, `sales_tax_collected`, `income_receiver`.
-  * A "Save Changes" button updates the `InventoryItem` document.
+**Timestamps:**
+- `created_at` (datetime)
+- `updated_at` (datetime)
+- `archived` (boolean)
 
-## 3. API Endpoints (Flask Routes)
+---
 
-These are the backend routes needed to power the frontend interactions.
+## 2. Core Features (Implemented)
 
-### CardDefinitions
+### 2.1 Dashboard (Homepage)
 
-* `GET /api/definitions`
-  * **Description:** Gets all card definitions.
-  * **Query Params:**
-    * `?q=...`: (For Search) Filters results based on a text search query.
-    * `?type=...`: (For Filter) Filters by `card_type`.
-  * **Response:** Array of `CardDefinition` objects.
-* `POST /api/definitions`
-  * **Description:** Creates a new `CardDefinition`.
-  * **Body:** JSON object of a new card definition. `imgbb_url` must be included.
-  * **Response:** The newly created `CardDefinition` object.
-* `GET /api/definitions/<id>`
-  * **Description:** Gets a single `CardDefinition` by its `_id`.
-  * **Response:** A single `CardDefinition` object.
-* `PUT /api/definitions/<id>`
-  * **Description:** Updates an existing `CardDefinition`.
-  * **Body:** JSON object with fields to update.
-  * **Response:** The updated `CardDefinition` object.
+**URL:** `/`
 
-### InventoryItems
+**Display Modes:**
+- **Card View:** Grid layout showing card images
+- **List View:** Compact list with card details
+- View preference saved in localStorage
 
-* `POST /api/inventory`
-  * **Description:** Creates a new `InventoryItem`.
-  * **Body:** JSON object for the new item. Must include the `card_definition_id`.
-  * **Response:** The newly created `InventoryItem` object.
-* `GET /api/inventory/<id>`
-  * **Description:** Gets a single `InventoryItem` by its `_id`.
-  * **Response:** A single `InventoryItem` object.
-* `PUT /api/inventory/<id>`
-  * **Description:** The main update route. Used to change status, add grading info, or add disposition (sale) info.
-  * **Body:** JSON object with fields to update (e.g., `{"status": "sold", "disposition": {...}}`).
-  * **Response:** The updated `InventoryItem` object.
-* `GET /api/inventory`
-  * **Description:** Gets `InventoryItem` documents.
-  * **Query Params:**
-    * `?definition_id=<id>`: **(Crucial)** Gets all inventory items for a *specific* card definition. Used in the dashboard drill-down.
-  * **Response:** Array of `InventoryItem` objects.
+**Search & Filters:**
+- **Text Search:** Full-text search across player/pokemon names, brands, series
+- **Advanced Filters (Collapsible):**
+  - Card Type (Sport/Pokemon)
+  - Year
+  - Series
+  - Name (Player/Pokemon)
+  - **Sport-specific:** Brand
+  - **Pokemon-specific:** Language, Era
+- **Filter Behavior:** Auto-submit on selection change
+- **Clear Filters:** Link to reset all filters
 
-### Dashboard & Utilities
+**Card Display:**
+- Card image with loading animation
+- Name, year, brand/series info
+- Status counts: In Stock, Grading, Shipping, Sold
+- Click to navigate to card detail page
 
-* `GET /api/dashboard`
-  * **Description:** **(Optimized Route)** Gets the aggregated data for the main dashboard. This route performs a MongoDB aggregation pipeline to combine `CardDefinitions` with the *counts* of their associated `InventoryItems` (grouped by status).
-  * **Response:** An array of `CardDefinition` objects, each with an added field like `counts: {"in_stock": X, "grading": Y, ...}`.
-* `POST /api/upload-image`
-  * **Description:** **(Security Route)** Acts as a proxy for ImgBB. The frontend sends the image file here. The server adds the secret `IMG BB_API_KEY` and forwards the request to ImgBB.
-  * **Body:** `multipart/form-data` (the image file).
-  * **Response:** `{"url": "http://imgbb.com/..."}`.
+**Action Buttons:**
+- Add Card (create new CardDefinition)
+- Add Inventory (create new InventoryItem)
 
-## 4. Database Schema
+### 2.2 Card Detail Page
 
-* The schema will be the two-collection model as defined in our previous conversation (`CardDefinitions` and `InventoryItems`).
+**URL:** `/card/<card_id>`
 
-## 5. Non-Functional Requirements
+**Left Panel:**
+- Card image with loading animation
+- Card name and info
+- Edit Card button
+- Archive button
 
-* **Security:** All API keys (MongoDB, ImgBB) **must** be stored in a `.env` file and loaded as environment variables.
-* **Version Control:** The `.gitignore` file **must** exclude `.env`, all virtual environment directories (e.g., `.venv/`), and `__pycache__/` directories.
-* **Package Management:** All Python dependencies must be managed using `uv` (via `uv pip compile` and `uv pip sync`).
+**Right Panel:**
+- Card Definition Details (type, series, language, era, notes)
+- Add Inventory Item button
+- Tabbed Inventory Display (by status):
+  - In Stock
+  - Shipping
+  - Grading
+  - Sold
+- Each item shows:
+  - Serial number (if exists) - prominently displayed
+  - Graded/Taiwan badges
+  - Condition and personal grade
+  - Acquisition cost
+  - Click to edit item
+
+### 2.3 Add/Edit Card Definition
+
+**Features:**
+- Card type selection (Sport/Pokemon) with dynamic field display
+- Image upload via ImgBB API
+- Type-specific field validation
+- Form submission with server-side validation
+
+### 2.4 Add/Edit Inventory Item
+
+**Features:**
+- Card selector modal with search and filters
+- Item image upload (optional, for serial variants)
+- Basic info: custom ID, serial number, status, condition
+- **Auto-calculating Acquisition Cost:** Total = Price + Shipping + Tax (readonly field)
+- Grading history management (add/remove entries)
+- Disposition section (visible when status = "sold")
+- Status-dependent field visibility
+
+### 2.5 Image Loading Optimization
+
+**Implementation:**
+- Shimmer loading animation while images load
+- Smooth fade-in transition when loaded
+- Spinner overlay on image container
+- Applied to:
+  - Dashboard card grid
+  - Dashboard list view
+  - Card detail page main image
+  - Modal card selectors
+
+---
+
+## 3. API Endpoints
+
+### Card Definitions
+- `GET /` - Dashboard with filters
+- `GET /card/<card_id>` - Card detail page
+- `POST /definitions/create` - Create new card definition
+- `POST /definitions/update/<id>` - Update card definition
+- `POST /definitions/archive/<id>` - Soft delete card definition
+
+### Inventory Items
+- `GET /api/inventory` - Get inventory items (supports `?definition_id=`)
+- `GET /api/inventory/<id>` - Get single item
+- `POST /inventory/create` - Create new inventory item
+- `POST /inventory/update/<id>` - Update inventory item
+- `POST /inventory/archive/<id>` - Soft delete item
+- `POST /inventory/<id>/delete-image` - Remove item image
+
+### Utilities
+- `GET /api/filter-options` - Get dynamic filter values based on current selection
+- `POST /api/upload` (via forms) - Image upload proxy to ImgBB
+
+---
+
+## 4. Recent Enhancements (Completed)
+
+### ✅ Filter Auto-Submit
+- Type filter now auto-submits form on change
+- Search bar includes visible search button
+- Consistent filter behavior across all dropdowns
+
+### ✅ Auto-Calculate Total Cost
+- Acquisition total cost automatically calculates from Price + Shipping + Tax
+- Applied to both Add and Edit inventory forms
+- Field is readonly to prevent manual override
+- Visual indicator "(Auto-calculated)" in label
+
+### ✅ Image Loading Animations
+- Shimmer skeleton loading effect
+- Spinner overlay during image load
+- Smooth opacity transition on load complete
+- Prevents layout shift during loading
+
+### ✅ Serial Number Display
+- Serial numbers prominently displayed in inventory item cards
+- Shown with icon indicator
+- Visible in card detail page inventory tabs
+- Included in dashboard expanded details
+
+---
+
+## 5. Planned Enhancements
+
+### 🔄 Searchable Dropdown Fields
+
+**Objective:** Replace standard text inputs with searchable dropdowns that:
+1. Show existing values as suggestions
+2. Allow typing new values if not found
+3. Provide autocomplete functionality
+
+**Target Fields:**
+- **Condition** - Show previously used condition values (e.g., "PSA 10", "BGS 9.5", "Raw")
+- **Personal Grade** - Show common grades (e.g., "Mint", "Near Mint", "Excellent")
+- **Acquired From** - Show previous sellers/sources
+- **Rarity** ⚠️ *Note: Field does not currently exist in model - requires data model update*
+
+**Implementation Approach:**
+1. **Backend:** Create API endpoint `/api/field-values/<field_name>` to return unique values
+2. **Frontend:** Integrate lightweight autocomplete library (e.g., Tom Select, Choices.js)
+3. **Progressive Enhancement:** Maintain fallback to regular input
+4. **Caching:** Cache frequent queries for performance
+
+**Technical Specifications:**
+
+```python
+# New API Endpoint
+@web_bp.route('/api/field-values/<field_name>')
+def get_field_values(field_name):
+    """
+    Returns unique values for a given field across all inventory items.
+
+    Supported fields:
+    - condition
+    - personal_grade
+    - acquired_from
+
+    Response: JSON array of strings
+    """
+    allowed_fields = ['condition', 'personal_grade']
+    nested_fields = {
+        'acquired_from': 'acquisition.acquiredFrom'
+    }
+
+    if field_name in allowed_fields:
+        values = items_collection.distinct(field_name)
+    elif field_name in nested_fields:
+        # Handle nested fields
+        values = items_collection.distinct(nested_fields[field_name])
+    else:
+        return {'error': 'Invalid field'}, 400
+
+    # Filter out empty values
+    values = [v for v in values if v and v.strip()]
+    return jsonify(sorted(values))
+```
+
+**Frontend Integration:**
+
+```javascript
+// Example using Tom Select
+new TomSelect('#condition_input', {
+    create: true,
+    createOnBlur: true,
+    load: function(query, callback) {
+        fetch('/api/field-values/condition')
+            .then(response => response.json())
+            .then(data => {
+                callback(data.map(value => ({value: value, text: value})));
+            });
+    }
+});
+```
+
+### 🔄 Additional Future Enhancements
+
+1. **Bulk Operations**
+   - Bulk status updates
+   - Batch export to CSV
+   - Multi-item acquisition entry
+
+2. **Advanced Analytics**
+   - Profit/loss tracking
+   - Inventory value estimates
+   - ROI calculations per card
+   - Grading fee analysis
+
+3. **Enhanced Search**
+   - Save filter presets
+   - Advanced search operators
+   - Search history
+
+4. **Notifications**
+   - Grading status updates
+   - Low inventory alerts
+   - Price tracking alerts
+
+5. **Multi-user Support**
+   - User authentication
+   - Role-based permissions
+   - Shared inventory views
+
+---
+
+## 6. Data Model Extensions (Future)
+
+### Potential New Fields
+
+**CardDefinition:**
+- `rarity` (string) - card rarity level
+- `manufacturer` (string) - card manufacturer
+- `edition` (string) - first edition, unlimited, etc.
+- `estimated_value` (decimal) - market value estimate
+
+**InventoryItem:**
+- `location` (string) - physical storage location
+- `insurance_value` (decimal)
+- `last_valued_date` (date)
+- `tags` (array) - custom categorization tags
+
+---
+
+## 7. Technical Notes
+
+### Image Management
+- All images hosted on ImgBB via API
+- API key stored in environment variable `IMGBB_API_KEY`
+- Supports card definition images and individual item photos
+- Cache-busting query param on card detail page
+
+### Database Queries
+- Aggregation pipeline for dashboard to combine definitions with inventory counts
+- Indexed on `card_definition_id` for fast lookups
+- Soft delete using `archived` flag (never hard delete)
+
+### Security
+- All secrets in `.env` file
+- MongoDB connection string never committed
+- ImgBB uploads proxied through backend (API key hidden from frontend)
+- Input validation on both client and server side
+
+### Performance
+- Filter options loaded dynamically via AJAX
+- LocalStorage for view preference persistence
+- Lazy loading of inventory items on card expansion
+- Optimized aggregation queries
+
+---
+
+## 8. Known Issues & Notes
+
+### Serial Number Clarification
+The requirement states "Add serial number to card details" but serial numbers:
+- ✅ Already exist in the InventoryItem model
+- ✅ Already displayed in inventory item cards
+- ✅ Already shown in card detail page inventory tabs
+
+**Interpretation:** This requirement appears to be completed. If referring to something else (e.g., adding serial to CardDefinition), please clarify as this wouldn't align with the data model (serial numbers are instance-specific, not template-specific).
+
+### Filter Performance
+For large datasets (>10,000 cards), consider:
+- Implementing pagination
+- Adding database indexes on frequently filtered fields
+- Caching filter options
+
+### Browser Compatibility
+- Tested primarily on modern browsers (Chrome, Firefox, Safari, Edge)
+- Tailwind CSS loaded from CDN (requires internet)
+- JavaScript ES6+ features used (may need transpilation for older browsers)
+
+---
+
+## 9. Deployment
+
+### Environment Variables Required
+```bash
+MONGODB_URI=mongodb+srv://...
+IMGBB_API_KEY=...
+SECRET_KEY=...
+FLASK_DEBUG=false
+BACKEND_PORT=5000
+FRONTEND_URL=http://localhost:5000
+```
+
+### Production Checklist
+- [ ] Set `FLASK_DEBUG=false`
+- [ ] Use production MongoDB instance
+- [ ] Configure proper SECRET_KEY
+- [ ] Set up HTTPS
+- [ ] Enable MongoDB backup
+- [ ] Monitor ImgBB API quota
+- [ ] Set up error logging (Sentry, etc.)
+
+### Running Locally
+```bash
+# Install dependencies
+uv pip sync
+
+# Run development server
+python main.py
+```
+
+---
+
+**Document Version:** 2.0
+**Last Updated:** 2025-01-12
+**Maintained By:** Development Team
